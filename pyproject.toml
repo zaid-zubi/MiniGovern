@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "minigovern"
+version = "0.1.0"
+description = "A Lightweight Data Governance Service"
+authors = ["Zaid Alzubi <zaidalzubi3@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+fastapi = "^0.136.3"
+alembic = "^1.18.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
