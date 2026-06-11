@@ -1,8 +1,9 @@
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db
+
 from core.config import settings
+from app.db.session import get_db
 
 app = FastAPI(title="MiniGovern", debug=settings.debug)
 
