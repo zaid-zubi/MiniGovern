@@ -1,6 +1,12 @@
 install:
 	poetry install
 
+activate:
+	poerty env activate
+
+defaultAdmin:
+	python -m seed.seed_admin
+
 db-up:
 	docker compose up -d
 

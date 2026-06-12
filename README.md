@@ -7,3 +7,6 @@ MiniGovern is Lightweight Data Governance Service
 
 3. Generate your encryption key by this : python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())", and update in .env
 
+4. Use "make migrate" for migrating the changes on your database
+
+5. Create Admin by running this command: make defaultAdmin
