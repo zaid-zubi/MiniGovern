@@ -3,9 +3,10 @@ from core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from core.db.session import get_db
+from app.views.auth import router as auth_router
 
 app = FastAPI(title="MiniGovern", debug=settings.debug)
-
+app.include_router(auth_router)
 
 @app.get("/health")
 async def health(db: AsyncSession = Depends(get_db)):

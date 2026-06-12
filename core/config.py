@@ -21,5 +21,9 @@ class Settings(BaseSettings):
     database_pool_size: int = 5
     database_max_overflow: int = 10
 
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60
+
 
 settings = Settings()
