@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.auth import get_current_active_user, require_roles
@@ -20,26 +21,34 @@ from core.security import create_access_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
-    user = await authenticate_user(db, body.email, body.password)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await authenticate_user(
+        db,
+        form_data.username,   # email here
+        form_data.password,
+    )
+
     if user is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
+        raise HTTPException(status_code=403, detail="Inactive user")
 
     access_token = create_access_token(
         subject=str(user.id),
         role=user.role.value,
         email=user.email,
     )
+
     return TokenResponse(access_token=access_token)
 
 
