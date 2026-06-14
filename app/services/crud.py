@@ -18,23 +18,35 @@ class CRUD:
 
     @staticmethod
     async def post(
-        db: AsyncSession,
-        table: type[ModelType],
-        body: dict[str, Any] | BaseModel,
+            db: AsyncSession,
+            table: type[ModelType],
+            body: dict[str, Any] | BaseModel | ModelType,
     ) -> ModelType:
-        instance = table(**CRUD._to_dict(body))
+
+        if isinstance(body, table):
+            instance = body
+        else:
+            instance = table(**CRUD._to_dict(body))
+
         db.add(instance)
-        await db.commit()
+        await db.flush()
         await db.refresh(instance)
+        await db.commit()
+
         return instance
 
     @staticmethod
     async def get_one(
-        db: AsyncSession,
-        table: type[ModelType],
-        record_id: int,
+            db: AsyncSession,
+            table: type[ModelType],
+            **filters,
     ) -> ModelType | None:
-        result = await db.execute(select(table).where(table.id == record_id))
+        stmt = select(table)
+
+        for field, value in filters.items():
+            stmt = stmt.where(getattr(table, field) == value)
+
+        result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -55,7 +67,7 @@ class CRUD:
         record_id: int,
         body: dict[str, Any] | BaseModel,
     ) -> ModelType | None:
-        instance = await CRUD.get_one(db, table, record_id)
+        instance = await CRUD.get_one(db, table, id=record_id)
         if instance is None:
             return None
 

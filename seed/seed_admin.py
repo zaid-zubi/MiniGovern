@@ -61,7 +61,7 @@ async def create_admin():
             email=email,
             hashed_password=hash_password(password),
             role=UserRole.ADMIN,
-            is_active=True,   # good practice for bootstrap admin
+            is_active=True,
         )
 
         db.add(admin)
