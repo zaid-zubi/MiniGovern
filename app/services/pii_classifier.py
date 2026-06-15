@@ -1,4 +1,7 @@
 from core.db.base import SensitivityLevel
+from core.logging import logger
+
+import re
 
 PII_RULES = {
     "email": SensitivityLevel.PII,
@@ -14,12 +17,11 @@ PII_RULES = {
     "credit_card": SensitivityLevel.SENSITIVE_PII,
 }
 
-import re
-
 EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w+$")
 PHONE_REGEX = re.compile(r"^\+?[0-9]{7,15}$")
 NID_REGEX = re.compile(r"^[0-9]{8,20}$")
 CARD_REGEX = re.compile(r"^[0-9]{13,19}$")
+
 
 def is_email(value: str) -> bool:
     return isinstance(value, str) and bool(EMAIL_REGEX.match(value.strip()))
@@ -50,15 +52,19 @@ def classify_value(value) -> SensitivityLevel | None:
         return None
 
     if is_email(value):
+        logger.debug("Value classified as PII (email pattern match)")
         return SensitivityLevel.PII
 
     if is_phone(value):
+        logger.debug("Value classified as PII (phone pattern match)")
         return SensitivityLevel.PII
 
     if is_credit_card(value):
+        logger.warning("Value classified as SENSITIVE_PII (credit card detected)")
         return SensitivityLevel.SENSITIVE_PII
 
     if is_national_id(value):
+        logger.warning("Value classified as SENSITIVE_PII (national ID detected)")
         return SensitivityLevel.SENSITIVE_PII
 
     return None
@@ -71,17 +77,38 @@ def classify_column(
 
     name = column_name.lower().strip()
 
+    logger.debug(f"Classifying column: {column_name}, samples={len(sample_values)}")
+
     for keyword, level in PII_RULES.items():
         if keyword in name:
+            logger.info(
+                f"Column classified by name match: {column_name} -> {level.value} (keyword={keyword})"
+            )
             return level, f"name_match={keyword}"
+
+    pii_hits = 0
+    sensitive_hits = 0
 
     for v in sample_values:
         level = classify_value(v)
 
         if level == SensitivityLevel.PII:
+            pii_hits += 1
+
+        elif level == SensitivityLevel.SENSITIVE_PII:
+            sensitive_hits += 1
+
+        if level == SensitivityLevel.PII:
+            logger.debug(f"PII detected in column {column_name} (value_match)")
             return SensitivityLevel.PII, "value_match=pii"
 
         if level == SensitivityLevel.SENSITIVE_PII:
+            logger.warning(f"SENSITIVE_PII detected in column {column_name}")
             return SensitivityLevel.SENSITIVE_PII, "value_match=sensitive_pii"
+
+    logger.debug(
+        f"Column classification result: {column_name} | "
+        f"PII_hits={pii_hits}, sensitive_hits={sensitive_hits}"
+    )
 
     return SensitivityLevel.NONE, None

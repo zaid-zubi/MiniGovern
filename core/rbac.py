@@ -11,6 +11,7 @@ class Permission(str, enum.Enum):
     DATASET_READ = "dataset:read"
     DATASET_WRITE = "dataset:write"
     SCAN_TRIGGER = "scan:trigger"
+    SCAN_READ = "scan:read"
     AUDIT_READ = "audit:read"
 
     CATEGORY_WRITE = "category:write"
@@ -32,7 +33,8 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
             Permission.DATASET_READ,
             Permission.AUDIT_READ,
             Permission.TAG_READ,
-            Permission.CATEGORY_READ
+            Permission.CATEGORY_READ,
+            Permission.SCAN_READ
         }
     ),
     UserRole.EDITOR: frozenset(

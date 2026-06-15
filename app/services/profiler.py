@@ -1,7 +1,12 @@
 from typing import Any
+from core.logging import logger
 
 
 def profile_column(rows: list[dict], column_name: str) -> dict:
+    logger.debug(
+        f"Profiling column: {column_name}, rows={len(rows)}"
+    )
+
     values = [row.get(column_name) for row in rows]
 
     total = len(values)
@@ -11,13 +16,21 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
     null_percentage = calculate_null_percentage(total, null_count)
     valid_ratio = calculate_valid_ratio(total, null_count)
 
-    return {
+    result = {
         "row_count": total,
         "null_count": null_count,
         "null_percentage": null_percentage,
         "distinct_count": distinct_count,
         "valid_ratio": valid_ratio
     }
+
+    logger.debug(
+        f"Column profile completed: {column_name} | "
+        f"rows={total}, nulls={null_count}, distinct={distinct_count}, "
+        f"valid_ratio={valid_ratio}"
+    )
+
+    return result
 
 
 def calculate_null_percentage(total: int, null_count: int) -> float:

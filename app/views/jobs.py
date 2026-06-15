@@ -15,7 +15,7 @@ from app.workers.scan_worker import run_scan_job
 from core.db.session import get_db
 from core.rbac import Permission
 
-from app.services.scan_job import create_scan_job as create_scan_job_service
+from app.services.scan_job import create_scan_job as create_scan_job_service, get_scan_job_status
 from core.settings.constants import ResponseMessages
 from core.settings.response import http_response
 
@@ -51,3 +51,14 @@ async def create_scan_job(
 async def get_scan_job(scan_job_id: int, db: AsyncSession = Depends(get_db)):
     scan_job = await crud.get_one(db, ScanJob, id=scan_job_id)
     return jsonable_encoder(scan_job)
+
+@router.get("/{scan_job_id}/status")
+async def read_scan_job_status(scan_job_id: int,
+                              db: Annotated[AsyncSession, Depends(get_db)],
+                              current_user: Annotated[User, Depends(require_permission(Permission.SCAN_TRIGGER))],
+                              language: Annotated[Language, Query()] = Language.EN,
+                              ):
+    data = await get_scan_job_status(scan_job_id, db)
+    return http_response(status=status.HTTP_201_CREATED,
+                         message=ResponseMessages.GENERAL.READ.get(language),
+                         data=data)

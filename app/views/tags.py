@@ -8,13 +8,14 @@ from app.deps.auth import require_permission
 from app.models import User
 from app.schemas.language import Language
 from app.services import tags
-from app.services.tags import get_list_tags
+from app.services.tags import get_list_tags, get_tag_by_id
 from core.db.session import get_db
 from core.rbac import Permission
 from core.settings.constants import ResponseMessages
 from core.settings.response import http_response
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
+
 
 @router.get("")
 async def read_tags(
@@ -29,6 +30,18 @@ async def read_tags(
                          message=ResponseMessages.TAGS.READ.get(language),
                          data=data)
 
+
+@router.get("/{tag_id}")
+async def get_tag(tag_id: int,
+                  db: Annotated[AsyncSession, Depends(get_db)],
+                  _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
+                  language: Annotated[Language, Query()] = Language.EN):
+    data = await get_tag_by_id(db, tag_id)
+    return http_response(status=status.HTTP_200_OK,
+                         message=ResponseMessages.GENERAL.READ.get(language),
+                         data=data)
+
+
 @router.post("/")
 async def create_tag(name: str,
                      language: Annotated[Language, Query()] = Language.EN,
@@ -40,15 +53,19 @@ async def create_tag(name: str,
                          message=ResponseMessages.TAGS.CREATED.get(language),
                          data=data)
 
+
 @router.get("/datasets")
 async def get_tag_with_datasets(tag_id: int = None,
                                 language: Annotated[Language, Query()] = Language.EN,
-                     db: AsyncSession = Depends(get_db),
-                     current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...):
+                                db: AsyncSession = Depends(get_db),
+                                current_user: Annotated[
+                                    User, Depends(require_permission(Permission.TAG_CREATE))] = ...):
     data = await tags.get_tag_with_datasets(tag_id, db)
     return http_response(status=status.HTTP_200_OK,
                          message=ResponseMessages.GENERAL.READ.get(language),
                          data=data)
+
+
 @router.post("/datasets/{dataset_id}/assign")
 async def assign_tag(
         dataset_id: int,

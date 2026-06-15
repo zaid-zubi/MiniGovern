@@ -1,9 +1,12 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+from core.logging import logger
 
 
 def get_mysql_engine(connection_url: str) -> AsyncEngine:
-    return create_async_engine(
+    logger.info("Creating MySQL async engine")
+
+    engine = create_async_engine(
         connection_url,
         pool_pre_ping=True,
         pool_size=5,
@@ -11,8 +14,13 @@ def get_mysql_engine(connection_url: str) -> AsyncEngine:
         pool_recycle=3600,
     )
 
+    logger.info("MySQL engine created successfully")
+    return engine
+
 
 async def get_tables(engine: AsyncEngine) -> list[str]:
+    logger.debug("Fetching tables from database")
+
     query = text("""
         SELECT table_name
         FROM information_schema.tables
@@ -22,13 +30,19 @@ async def get_tables(engine: AsyncEngine) -> list[str]:
 
     async with engine.connect() as conn:
         result = await conn.execute(query)
-        return [row[0] for row in result.fetchall()]
+        tables = [row[0] for row in result.fetchall()]
+
+    logger.info(f"Tables fetched: count={len(tables)}")
+
+    return tables
 
 
 async def get_columns(
         engine: AsyncEngine,
         table_name: str,
 ) -> list[dict]:
+    logger.debug(f"Fetching columns for table: {table_name}")
+
     query = text("""
         SELECT column_name, data_type
         FROM information_schema.columns
@@ -38,12 +52,12 @@ async def get_columns(
     """)
 
     async with engine.connect() as conn:
-        result = await conn.execute(
-            query,
-            {"table_name": table_name},
-        )
+        result = await conn.execute(query, {"table_name": table_name})
+        columns = result.mappings().all()
 
-        return result.mappings().all()
+    logger.info(f"Columns fetched: table={table_name}, count={len(columns)}")
+
+    return columns
 
 
 async def get_sample_rows(
@@ -51,6 +65,10 @@ async def get_sample_rows(
         table_name: str,
         limit: int = 100,
 ) -> list[dict]:
+    logger.debug(
+        f"Fetching sample rows: table={table_name}, limit={limit}"
+    )
+
     query = text(f"""
         SELECT *
         FROM `{table_name}`
@@ -59,19 +77,10 @@ async def get_sample_rows(
 
     async with engine.connect() as conn:
         result = await conn.execute(query, {"limit": limit})
-        return result.mappings().all()
+        rows = result.mappings().all()
 
-async def get_sample_rows(
-        engine: AsyncEngine,
-        table_name: str,
-        limit: int = 100,
-) -> list[dict]:
-    query = text(f"""
-        SELECT *
-        FROM `{table_name}`
-        LIMIT :limit
-    """)
+    logger.info(
+        f"Sample rows fetched: table={table_name}, count={len(rows)}"
+    )
 
-    async with engine.connect() as conn:
-        result = await conn.execute(query, {"limit": limit})
-        return result.mappings().all()
+    return rows

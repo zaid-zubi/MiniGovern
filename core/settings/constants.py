@@ -27,3 +27,7 @@ class ResponseMessages:
         CREATE = {"en": "Datasource created successfully", "ar": "تم اضافة مصدر البيانات بنجاح"}
         UPDATE = {"en": "Datasource updated successfully", "ar": "تم تعديل مصدر البيانات بنجاح"}
         DELETE = {"en": "Datasource deleted successfully", "ar": "تم حذف مصدر البيانات بنجاح"}
+
+class Error:
+    USER_NOT_FOUND = "User not found"
+    INCORRECT_EMAIL_OR_PASSWORD = "Incorrect email or password"
