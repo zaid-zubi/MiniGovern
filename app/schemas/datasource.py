@@ -41,5 +41,5 @@ class CategoryRead(BaseModel):
     description: str | None
 
     model_config = {"from_attributes": True}
-class DataSourceWithCategories(DataSourceRead):
+class ListDataSourceWithCategories(DataSourceRead):
     categories: list[CategoryRead]

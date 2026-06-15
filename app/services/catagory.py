@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Category
 from app.schemas.category import CategoryIn, CategoryUpdate
-from app.schemas.datasource import DataSourceWithCategories
+from app.schemas.datasource import ListDataSourceWithCategories
 from app.services.crud import crud
 from app.services.datasource import get_datasource_with_categories
 
@@ -51,7 +51,7 @@ async def assign_datasource_with_category(category_id, datasource_id, db):
     datasource.categories.append(category)
 
     await crud.commit(db, datasource)
-    return DataSourceWithCategories.model_validate(datasource)
+    return ListDataSourceWithCategories.model_validate(datasource)
 
 
 async def unassign_datasource_with_category(datasource_id: int, category_id: int, db: AsyncSession):
@@ -64,4 +64,4 @@ async def unassign_datasource_with_category(datasource_id: int, category_id: int
     datasource.categories.remove(category)
 
     await crud.commit(db, datasource)
-    return DataSourceWithCategories.model_validate(datasource)
+    return ListDataSourceWithCategories.model_validate(datasource)

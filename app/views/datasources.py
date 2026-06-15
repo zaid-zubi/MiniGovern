@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.deps.auth import get_current_active_user, require_permission
 from app.models.user import User
 from app.schemas.datasource import DataSourceCreate, DataSourceRead, DataSourceUpdate
+from app.schemas.language import Language
 from app.services.datasource import (
     create_datasource,
     delete_datasource,
@@ -15,63 +16,79 @@ from app.services.datasource import (
 )
 from core.db.session import get_db
 from core.rbac import Permission
+from core.settings.constants import ResponseMessages
+from core.settings.response import http_response
 
 router = APIRouter(prefix="/datasources", tags=["datasources"])
 
 
-@router.get("", response_model=list[DataSourceRead])
+@router.get("")
 async def read_datasources(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_permission(Permission.DATASOURCE_READ))],
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=200),
-) -> list[DataSourceRead]:
-    return await list_datasources(db, skip=skip, limit=limit)
+        db: Annotated[AsyncSession, Depends(get_db)],
+        _: Annotated[User, Depends(require_permission(Permission.DATASOURCE_READ))],
+        language: Annotated[Language, Query()] = Language.EN,
+        skip: int = Query(default=0, ge=0),
+        limit: int = Query(default=100, ge=1, le=200),
+):
+    data = await list_datasources(db, skip=skip, limit=limit)
+    return http_response(status=status.HTTP_200_OK,
+                         message=ResponseMessages.DATASOURCE.READ.get(language),
+                         data=data)
 
-
-@router.get("/{datasource_id}", response_model=DataSourceRead)
+@router.get("/{datasource_id}")
 async def read_datasource(
-    datasource_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_permission(Permission.DATASOURCE_READ))],
-) -> DataSourceRead:
-    datasource = await get_datasource(db, datasource_id)
-    if datasource is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Datasource not found")
-    return datasource
+        datasource_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[User, Depends(require_permission(Permission.DATASOURCE_READ))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await get_datasource(db, datasource_id)
+    return http_response(status=status.HTTP_200_OK,
+                         message=ResponseMessages.DATASOURCE.READ.get(language),
+                         data=data)
 
 
-@router.post("", response_model=DataSourceRead, status_code=status.HTTP_201_CREATED)
+@router.post("")
 async def add_datasource(
-    body: DataSourceCreate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
-) -> DataSourceRead:
-    return await create_datasource(db, body, current_user)
+        body: DataSourceCreate,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await create_datasource(db, body, current_user)
+    return http_response(status=status.HTTP_201_CREATED,
+                         message=ResponseMessages.DATASOURCE.CREATE.get(language),
+                         data=data)
 
 
-@router.patch("/{datasource_id}", response_model=DataSourceRead)
+@router.patch("/{datasource_id}")
 async def patch_datasource(
-    datasource_id: int,
-    body: DataSourceUpdate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
-) -> DataSourceRead:
-    return await update_datasource(db, datasource_id, body)
+        datasource_id: int,
+        body: DataSourceUpdate,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await update_datasource(db, datasource_id, body, current_user)
+    return http_response(status=status.HTTP_201_CREATED,
+                         message=ResponseMessages.DATASOURCE.UPDATE.get(language),
+                         data=data)
 
 
-@router.delete("/{datasource_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{datasource_id}")
 async def remove_datasource(
-    datasource_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
-) -> None:
-    deleted = await delete_datasource(db, datasource_id)
-    if deleted == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Datasource not found")
+        datasource_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[User, Depends(require_permission(Permission.DATASOURCE_WRITE))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await delete_datasource(db, datasource_id, current_user)
+    return http_response(status=status.HTTP_201_CREATED,
+                         message=ResponseMessages.DATASOURCE.DELETE.get(language),
+                         data=data)
 
 
 @router.get("/test_connection/")
-async def test_connection_datasource(datasource_id: int, db: AsyncSession=Depends(get_db)):
+async def test_connection_datasource(datasource_id: int, db: AsyncSession = Depends(get_db)):
     test_conn = await test_connection(datasource_id, db)
     return test_conn

@@ -21,4 +21,8 @@ class ResponseMessages:
         ASSIGN = {"en": "Category Assigned Successfully", "ar": "تم تعيين الفئة بنجاح"}
         UNASSIGN = {"en": "Category Unassigned Successfully", "ar": "تم الغاء تعيين الفئة بنجاح"}
         UPDATED = {"en": "Category Updated Successfully", "ar": "تم تعديل الفئة بنجاح"}
-
+    class DATASOURCE:
+        READ = {"en": "Datasource retrieved successfully", "ar": "تم جلب مصدر البيانات بنجاح"}
+        CREATE = {"en": "Datasource created successfully", "ar": "تم اضافة مصدر البيانات بنجاح"}
+        UPDATE = {"en": "Datasource updated successfully", "ar": "تم تعديل مصدر البيانات بنجاح"}
+        DELETE = {"en": "Datasource deleted successfully", "ar": "تم حذف مصدر البيانات بنجاح"}

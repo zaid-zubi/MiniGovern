@@ -5,15 +5,17 @@ from sqlalchemy.orm import selectinload
 
 from app.models.datasource import DataSource
 from app.models.user import User
-from app.schemas.datasource import DataSourceCreate, DataSourceUpdate, DataSourceWithCategories
+from app.schemas.datasource import DataSourceCreate, DataSourceUpdate, ListDataSourceWithCategories, DataSourceRead
 from app.services.crud import crud
 from core.encryption import encrypt_value, decrypt_value
 
 
+from app.services.audit import log_audit_action
+
 async def create_datasource(
-        db: AsyncSession,
-        body: DataSourceCreate,
-        owner: User,
+    db: AsyncSession,
+    body: DataSourceCreate,
+    owner: User,
 ) -> DataSource:
     datasource = DataSource(
         name=body.name,
@@ -24,15 +26,31 @@ async def create_datasource(
         encrypted_password=encrypt_value(body.password),
         owner_id=owner.id,
     )
+
     await crud.post(db, DataSource, datasource)
 
-    return datasource
+    await log_audit_action(
+        db,
+        actor_id=owner.id,
+        action="create",
+        entity_type="datasource",
+        entity_id=datasource.id,
+        details={
+            "name": datasource.name,
+            "host": datasource.host,
+            "database": datasource.database,
+        },
+    )
+
+    await db.commit()
+
+    return DataSourceRead.model_validate(datasource)
 
 
 async def get_datasource(
         db: AsyncSession,
         datasource_id: int,
-) -> DataSource:
+):
     datasource = await crud.get_one(
         db,
         DataSource,
@@ -45,12 +63,12 @@ async def get_datasource(
             detail="Datasource not found",
         )
 
-    return datasource
+    return DataSourceRead.model_validate(datasource)
 
 async def get_datasource_with_categories(
     db: AsyncSession,
     datasource_id: int,
-) -> DataSourceWithCategories:
+) -> ListDataSourceWithCategories:
 
     datasource = await crud.get_one(
         db,
@@ -69,20 +87,23 @@ async def list_datasources(
         *,
         skip: int = 0,
         limit: int = 100,
-) -> list[DataSource]:
-    return await crud.get_all(
+) -> list[DataSourceRead]:
+    datasources = await crud.get_all(
         db,
         DataSource,
         skip=skip,
         limit=limit,
     )
+    datasources_list = [DataSourceRead.model_validate(datasource) for datasource in datasources]
+    return datasources_list
 
 
 async def update_datasource(
-        db: AsyncSession,
-        datasource_id: int,
-        body: DataSourceUpdate,
-) -> DataSource:
+    db: AsyncSession,
+    datasource_id: int,
+    body: DataSourceUpdate,
+    actor: User,
+):
     datasource = await crud.get_one(
         db,
         DataSource,
@@ -95,6 +116,14 @@ async def update_datasource(
             detail="Datasource not found",
         )
 
+    before = {
+        "name": datasource.name,
+        "host": datasource.host,
+        "port": datasource.port,
+        "database": datasource.database,
+        "username": datasource.username,
+    }
+
     updates = body.model_dump(exclude_unset=True)
 
     if "password" in updates:
@@ -105,21 +134,71 @@ async def update_datasource(
     for key, value in updates.items():
         setattr(datasource, key, value)
 
+    await db.flush()
+
+    after = {
+        "name": datasource.name,
+        "host": datasource.host,
+        "port": datasource.port,
+        "database": datasource.database,
+        "username": datasource.username,
+    }
+
+    await log_audit_action(
+        db,
+        actor_id=actor.id,
+        action="update",
+        entity_type="datasource",
+        entity_id=datasource.id,
+        details={
+            "before": before,
+            "after": after,
+        },
+    )
+
     await db.commit()
     await db.refresh(datasource)
 
-    return datasource
+    return DataSourceRead.model_validate(datasource)
 
 
 async def delete_datasource(
-        db: AsyncSession,
-        datasource_id: int,
+    db: AsyncSession,
+    datasource_id: int,
+    actor: User,
 ) -> int:
-    return await crud.delete(
+    datasource = await crud.get_one(
+        db,
+        DataSource,
+        id=datasource_id,
+    )
+
+    if not datasource:
+        raise HTTPException(
+            status_code=404,
+            detail="Datasource not found",
+        )
+
+    await log_audit_action(
+        db,
+        actor_id=actor.id,
+        action="delete",
+        entity_type="datasource",
+        entity_id=datasource.id,
+        details={
+            "name": datasource.name,
+            "host": datasource.host,
+            "database": datasource.database,
+        },
+    )
+
+    await crud.delete(
         db,
         DataSource,
         datasource_id,
     )
+
+    return datasource_id
 
 
 def build_mysql_connection_url(
