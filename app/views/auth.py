@@ -23,7 +23,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def login(
         form_data: OAuth2PasswordRequestForm = Depends(),
         db: AsyncSession = Depends(get_db),
-        language: Language = Query(default=Language.EN)
+        language: Annotated[Language, Query()] = Language.EN,
 ):
     data = await login_user(form_data, db)
     return data
@@ -41,7 +41,7 @@ async def register_user(
         body: UserCreate,
         db: AsyncSession = Depends(get_db),
         admin: Annotated[User, Depends(require_roles(UserRole.ADMIN))] = ...,
-        language: Language = Query(default=Language.EN),
+        language: Annotated[Language, Query()] = Language.EN,
 
 ):
     new_user = await register_and_create_user(body, admin, db)
@@ -56,7 +56,7 @@ async def patch_user(
         body: UserUpdate,
         db: AsyncSession = Depends(get_db),
         admin: Annotated[User, Depends(require_roles(UserRole.ADMIN))] = ...,
-        language: Language = Query(default=Language.EN),
+        language: Annotated[Language, Query()] = Language.EN,
 
 ):
     data = await update_user(user_id, body, admin.id, db)

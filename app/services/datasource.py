@@ -6,10 +6,9 @@ from sqlalchemy.orm import selectinload
 from app.models.datasource import DataSource
 from app.models.user import User
 from app.schemas.datasource import DataSourceCreate, DataSourceUpdate, ListDataSourceWithCategories, DataSourceRead
+from app.services.audit import log_audit_action
 from app.services.crud import crud
 from core.encryption import encrypt_value, decrypt_value
-
-from app.services.audit import log_audit_action
 
 
 async def create_datasource(
@@ -47,10 +46,7 @@ async def create_datasource(
     return DataSourceRead.model_validate(datasource)
 
 
-async def get_datasource(
-        db: AsyncSession,
-        datasource_id: int,
-):
+async def _get_datasource(db: AsyncSession, datasource_id: int):
     datasource = await crud.get_one(
         db,
         DataSource,
@@ -62,7 +58,14 @@ async def get_datasource(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Datasource not found",
         )
+    return datasource
 
+
+async def get_datasource(
+        db: AsyncSession,
+        datasource_id: int,
+):
+    datasource = await _get_datasource(db, datasource_id)
     return DataSourceRead.model_validate(datasource)
 
 

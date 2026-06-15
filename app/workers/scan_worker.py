@@ -1,31 +1,27 @@
-from app.services.scan_job import (
-    get_scan_job,
-    start_scan_job,
-    complete_scan_job,
-    fail_scan_job,
+from app.services.catalog import (
+    get_or_create_table_catalog,
+    upsert_column_catalog,
 )
-
-from app.services.datasource import build_mysql_connection_url, get_datasource
+from app.services.dataset import get_or_create_dataset
+from app.services.datasource import build_mysql_connection_url, _get_datasource
 from app.services.mysql_scanner import (
     get_mysql_engine,
     get_tables,
     get_columns,
     get_sample_rows,
 )
-
-from app.services.catalog import (
-    get_or_create_table_catalog,
-    upsert_column_catalog,
-)
-
-from app.services.dataset import get_or_create_dataset
-from app.services.profiler import profile_column
 from app.services.pii_classifier import classify_column
-
+from app.services.profiler import profile_column
+from app.services.scan_job import (
+    get_scan_job,
+    start_scan_job,
+    complete_scan_job,
+    fail_scan_job,
+)
 from core.db.session import AsyncSessionLocal
 
 
-async def run_scan_job(scan_job_id: int):
+async def run_scan_job(scan_job_id: int, user_id: int):
     engine = None
 
     async with AsyncSessionLocal() as db:
@@ -38,7 +34,7 @@ async def run_scan_job(scan_job_id: int):
 
             await start_scan_job(job, db)
 
-            datasource = await get_datasource(db, job.datasource_id)
+            datasource = await _get_datasource(db, job.datasource_id)
 
             connection_url = build_mysql_connection_url(datasource)
             engine = get_mysql_engine(connection_url)
@@ -103,11 +99,11 @@ async def run_scan_job(scan_job_id: int):
                 summary["tables"] += 1
                 summary["datasets"] += 1
 
-            await complete_scan_job(job, summary, db)
+            await complete_scan_job(job, summary, db, user_id)
 
         except Exception as e:
             if job:
-                await fail_scan_job(job, str(e), db)
+                await fail_scan_job(job, str(e), db, user_id)
                 raise e
 
         finally:

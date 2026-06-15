@@ -9,7 +9,7 @@ class AuditLog(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    action: Mapped[str] = mapped_column(String(50))       # submit, approve, reject
+    action: Mapped[str] = mapped_column(String(50))
     entity_type: Mapped[str] = mapped_column(String(50))
     entity_id: Mapped[int] = mapped_column(Integer)
     details: Mapped[dict | None] = mapped_column(JSON)

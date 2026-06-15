@@ -31,7 +31,7 @@ async def read_tags(
 
 @router.post("/")
 async def create_tag(name: str,
-                     language: Language = Query(default=Language.EN),
+                     language: Annotated[Language, Query()] = Language.EN,
                      db: AsyncSession = Depends(get_db),
                      current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...
                      ):
@@ -42,7 +42,7 @@ async def create_tag(name: str,
 
 @router.get("/datasets")
 async def get_tag_with_datasets(tag_id: int = None,
-                                language: Language = Query(default=Language.EN),
+                                language: Annotated[Language, Query()] = Language.EN,
                      db: AsyncSession = Depends(get_db),
                      current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...):
     data = await tags.get_tag_with_datasets(tag_id, db)
@@ -53,7 +53,7 @@ async def get_tag_with_datasets(tag_id: int = None,
 async def assign_tag(
         dataset_id: int,
         tag_name: str,
-        language: Language = Query(default=Language.EN),
+        language: Annotated[Language, Query()] = Language.EN,
         db: AsyncSession = Depends(get_db),
         current_user: Annotated[User, Depends(require_permission(Permission.TAG_ASSIGN))] = ...
 ):
@@ -69,7 +69,7 @@ async def assign_tag(
 async def unassign_tag(
         dataset_id: int,
         tag_name: str,
-        language: Language = Query(default=Language.EN),
+        language: Annotated[Language, Query()] = Language.EN,
         db: AsyncSession = Depends(get_db),
         current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...
 ):
@@ -81,7 +81,7 @@ async def unassign_tag(
 
 @router.delete("/")
 async def delete_tag(tag_id: int,
-                     language: Language = Query(default=Language.EN),
+                     language: Annotated[Language, Query()] = Language.EN,
                      db: AsyncSession = Depends(get_db),
                      current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...):
     data = await tags.delete_tag(tag_id, db)
