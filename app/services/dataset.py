@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import Dataset
 from app.services.crud import crud
@@ -9,16 +10,8 @@ from core.db.base import WorkflowState
 async def get_dataset(
         db: AsyncSession,
         dataset_id: int,
-) -> Dataset | None:
-    result = await crud.get_one(db, Dataset, id=dataset_id)
-    return result
-
-
-async def get_dataset(
-        db: AsyncSession,
-        dataset_id: int,
 ) -> Dataset:
-    dataset = await get_dataset(db, dataset_id)
+    dataset = await crud.get_one(db, Dataset, id=dataset_id)
 
     if not dataset:
         raise HTTPException(
@@ -28,7 +21,19 @@ async def get_dataset(
 
     return dataset
 
+async def get_dataset_with_tags(
+        db: AsyncSession,
+        dataset_id: int,
+) -> Dataset:
+    dataset = await crud.get_one(db, Dataset, selectinload(Dataset.tags), id=dataset_id)
 
+    if not dataset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dataset not found",
+        )
+
+    return dataset
 async def create_dataset(
         db: AsyncSession,
         table_name: str,

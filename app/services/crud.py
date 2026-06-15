@@ -39,10 +39,12 @@ class CRUD:
     async def get_one(
             db: AsyncSession,
             table: type[ModelType],
+            *options: Any,
             **filters,
     ) -> ModelType | None:
         stmt = select(table)
-
+        if options:
+            stmt = stmt.options(*options)
         for field, value in filters.items():
             stmt = stmt.where(getattr(table, field) == value)
 
@@ -51,21 +53,21 @@ class CRUD:
 
     @staticmethod
     async def get_all(
-        db: AsyncSession,
-        table: type[ModelType],
-        *,
-        skip: int = 0,
-        limit: int = 100,
+            db: AsyncSession,
+            table: type[ModelType],
+            *,
+            skip: int = 0,
+            limit: int = 100,
     ) -> list[ModelType]:
         result = await db.execute(select(table).offset(skip).limit(limit))
         return list(result.scalars().all())
 
     @staticmethod
     async def update(
-        db: AsyncSession,
-        table: type[ModelType],
-        record_id: int,
-        body: dict[str, Any] | BaseModel,
+            db: AsyncSession,
+            table: type[ModelType],
+            record_id: int,
+            body: dict[str, Any] | BaseModel,
     ) -> ModelType | None:
         instance = await CRUD.get_one(db, table, id=record_id)
         if instance is None:
@@ -80,14 +82,22 @@ class CRUD:
 
     @staticmethod
     async def delete(
-        db: AsyncSession,
-        table: type[ModelType],
-        record_ids: int | list[int],
+            db: AsyncSession,
+            table: type[ModelType],
+            record_ids: int | list[int],
     ) -> int:
         ids = [record_ids] if isinstance(record_ids, int) else record_ids
         result = await db.execute(delete(table).where(table.id.in_(ids)))
         await db.commit()
         return result.rowcount or 0
+
+    @staticmethod
+    async def commit(
+            db: AsyncSession,
+            instance: ModelType
+    ):
+        await db.commit()
+        await db.refresh(instance)
 
 
 crud = CRUD()

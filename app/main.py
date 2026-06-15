@@ -6,11 +6,14 @@ from core.db.session import get_db
 from app.views.auth import router as auth_router
 from app.views.datasources import router as datasources_router
 from app.views.jobs import router as scan_job_router
+from app.views.tags import router as tags_router
 
 app = FastAPI(title="MiniGovern", debug=settings.debug)
 app.include_router(auth_router)
 app.include_router(datasources_router)
 app.include_router(scan_job_router)
+app.include_router(tags_router)
+
 
 @app.get("/health")
 async def health(db: AsyncSession = Depends(get_db)):

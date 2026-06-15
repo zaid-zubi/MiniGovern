@@ -17,6 +17,7 @@ class Tag(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
     is_system: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     datasets: Mapped[list["Dataset"]] = relationship(
         secondary=dataset_tags, back_populates="tags"

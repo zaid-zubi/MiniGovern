@@ -13,6 +13,10 @@ class Permission(str, enum.Enum):
     SCAN_TRIGGER = "scan:trigger"
     AUDIT_READ = "audit:read"
     CATEGORY_WRITE = "category:write"
+    TAG_ASSIGN = "tag:assign"
+    TAG_CREATE = "tag:create"
+    TAG_READ = "tag:read"
+    TAG_DELETE = "tag:delete"
 
 
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
@@ -21,6 +25,7 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
             Permission.DATASOURCE_READ,
             Permission.DATASET_READ,
             Permission.AUDIT_READ,
+            Permission.TAG_READ
         }
     ),
     UserRole.EDITOR: frozenset(
@@ -32,6 +37,10 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
             Permission.SCAN_TRIGGER,
             Permission.AUDIT_READ,
             Permission.CATEGORY_WRITE,
+            Permission.TAG_READ,
+            Permission.TAG_ASSIGN,
+            Permission.TAG_CREATE,
+            Permission.TAG_DELETE
         }
     ),
     UserRole.ADMIN: frozenset(Permission),
