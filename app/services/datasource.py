@@ -9,13 +9,13 @@ from app.schemas.datasource import DataSourceCreate, DataSourceUpdate, ListDataS
 from app.services.crud import crud
 from core.encryption import encrypt_value, decrypt_value
 
-
 from app.services.audit import log_audit_action
 
+
 async def create_datasource(
-    db: AsyncSession,
-    body: DataSourceCreate,
-    owner: User,
+        db: AsyncSession,
+        body: DataSourceCreate,
+        owner: User,
 ) -> DataSource:
     datasource = DataSource(
         name=body.name,
@@ -65,11 +65,11 @@ async def get_datasource(
 
     return DataSourceRead.model_validate(datasource)
 
-async def get_datasource_with_categories(
-    db: AsyncSession,
-    datasource_id: int,
-) -> ListDataSourceWithCategories:
 
+async def get_datasource_with_categories(
+        db: AsyncSession,
+        datasource_id: int,
+) -> ListDataSourceWithCategories:
     datasource = await crud.get_one(
         db,
         DataSource,
@@ -81,6 +81,7 @@ async def get_datasource_with_categories(
         raise HTTPException(status_code=404, detail="Datasource not found")
 
     return datasource
+
 
 async def list_datasources(
         db: AsyncSession,
@@ -99,10 +100,10 @@ async def list_datasources(
 
 
 async def update_datasource(
-    db: AsyncSession,
-    datasource_id: int,
-    body: DataSourceUpdate,
-    actor: User,
+        db: AsyncSession,
+        datasource_id: int,
+        body: DataSourceUpdate,
+        actor: User,
 ):
     datasource = await crud.get_one(
         db,
@@ -163,9 +164,9 @@ async def update_datasource(
 
 
 async def delete_datasource(
-    db: AsyncSession,
-    datasource_id: int,
-    actor: User,
+        db: AsyncSession,
+        datasource_id: int,
+        actor: User,
 ) -> int:
     datasource = await crud.get_one(
         db,

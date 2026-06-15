@@ -13,6 +13,7 @@ async def log_audit_action(
     entity_id: int,
     dataset_id: int | None = None,
     details: dict | None = None,
+    can_commit: bool = False
 ) -> AuditLog:
     """
     Create an audit log entry.
@@ -26,6 +27,8 @@ async def log_audit_action(
         dataset_id=dataset_id,
         details=details,
     )
+    if can_commit:
+        await crud.post(db, AuditLog, audit)
+    db.add(audit)
 
-    await crud.post(db, AuditLog, audit)
     return audit

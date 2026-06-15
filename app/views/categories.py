@@ -24,7 +24,7 @@ async def add_category(category: CategoryIn,
                        current_user: Annotated[User, Depends(require_permission(Permission.CATEGORY_WRITE))] = ...,
                        language: Annotated[Language, Query()] = Language.EN
                        ):
-    data = await create_category(category, db)
+    data = await create_category(category, db, current_user.id)
     return http_response(status=status.HTTP_201_CREATED,
                          message=ResponseMessages.CATEGORY.CREATED.get(language),
                          data=data)
@@ -38,7 +38,7 @@ async def update_category(
         current_user: Annotated[User, Depends(require_permission(Permission.CATEGORY_UPDATE))],
         language: Annotated[Language, Query()] = Language.EN,
 ):
-    data = await update_category_service(category, category_id, db)
+    data = await update_category_service(category, category_id, db, current_user.id)
     return http_response(status=status.HTTP_201_CREATED, message=ResponseMessages.CATEGORY.UPDATED.get(language),
                          data=data)
 
@@ -57,10 +57,10 @@ async def read_category(
 @router.delete("/{category_id}")
 async def remove_category(category_id: int,
                           db: Annotated[AsyncSession, Depends(get_db)],
-                          _: Annotated[User, Depends(require_permission(Permission.CATEGORY_DELETE))] = ...,
+                          current_user: Annotated[User, Depends(require_permission(Permission.CATEGORY_DELETE))] = ...,
                           language: Annotated[Language, Query()] = Language.EN
                           ):
-    data = await delete_category(category_id, db)
+    data = await delete_category(category_id, db, current_user.id)
     return http_response(status=status.HTTP_200_OK, message=ResponseMessages.CATEGORY.DELETED.get(language), data=data)
 
 
@@ -68,22 +68,21 @@ async def remove_category(category_id: int,
 async def assign_datasource_to_category(datasource_id: int,
                                         category_id: int,
                                         db: Annotated[AsyncSession, Depends(get_db)],
-                                        _: Annotated[
+                                        current_user: Annotated[
                                             User, Depends(require_permission(Permission.CATEGORY_WRITE))] = ...,
                                         language: Annotated[Language, Query()] = Language.EN
                                         ):
-    data = await assign_datasource_with_category(category_id, datasource_id, db)
+    data = await assign_datasource_with_category(category_id, datasource_id, db, current_user.id)
     return http_response(status=status.HTTP_200_OK, message=ResponseMessages.CATEGORY.ASSIGN.get(language), data=data)
-
 
 
 @router.delete("/{datasource_id}/categories/{category_id}")
 async def unassign_category_from_datasource(
-    datasource_id: int,
-    category_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_permission(Permission.CATEGORY_WRITE))] = ...,
-    language: Annotated[Language, Query()] = Language.EN,
+        datasource_id: int,
+        category_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[User, Depends(require_permission(Permission.CATEGORY_WRITE))] = ...,
+        language: Annotated[Language, Query()] = Language.EN,
 ):
-    data = await unassign_datasource_with_category(category_id, datasource_id, db)
+    data = await unassign_datasource_with_category(datasource_id, category_id, db, current_user.id)
     return http_response(status=status.HTTP_200_OK, message=ResponseMessages.CATEGORY.UNASSIGN.get(language), data=data)

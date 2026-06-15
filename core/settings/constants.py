@@ -14,6 +14,7 @@ class ResponseMessages:
         DELETED = {"en": "Tag deleted successfully", "ar": "تم حذف الوسم بنجاح"}
         ASSIGN = {"en": "Tag Assigned Successfully", "ar": "تم تعيين الوسم بنجاح"}
         UNASSIGN = {"en": "Tag Unassigned Successfully", "ar": "تم إلغاء تعيين الوسم بنجاح"}
+        READ = {"en": "Tag retrieved successfully", "ar": "تم جلب الوسم بنجاح"}
 
     class CATEGORY:
         CREATED = {"en": "Category created successfully", "ar": "تم إنشاء الفئة بنجاح"}
