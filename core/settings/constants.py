@@ -15,3 +15,10 @@ class ResponseMessages:
         ASSIGN = {"en": "Tag Assigned Successfully", "ar": "تم تعيين الوسم بنجاح"}
         UNASSIGN = {"en": "Tag Unassigned Successfully", "ar": "تم إلغاء تعيين الوسم بنجاح"}
 
+    class CATEGORY:
+        CREATED = {"en": "Category created successfully", "ar": "تم إنشاء الفئة بنجاح"}
+        DELETED = {"en": "Category deleted successfully", "ar": "تم حذف الفئة بنجاح"}
+        ASSIGN = {"en": "Category Assigned Successfully", "ar": "تم تعيين الفئة بنجاح"}
+        UNASSIGN = {"en": "Category Unassigned Successfully", "ar": "تم الغاء تعيين الفئة بنجاح"}
+        UPDATED = {"en": "Category Updated Successfully", "ar": "تم تعديل الفئة بنجاح"}
+

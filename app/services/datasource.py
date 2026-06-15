@@ -1,10 +1,11 @@
 from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import selectinload
 
 from app.models.datasource import DataSource
 from app.models.user import User
-from app.schemas.datasource import DataSourceCreate, DataSourceUpdate
+from app.schemas.datasource import DataSourceCreate, DataSourceUpdate, DataSourceWithCategories
 from app.services.crud import crud
 from core.encryption import encrypt_value, decrypt_value
 
@@ -46,6 +47,22 @@ async def get_datasource(
 
     return datasource
 
+async def get_datasource_with_categories(
+    db: AsyncSession,
+    datasource_id: int,
+) -> DataSourceWithCategories:
+
+    datasource = await crud.get_one(
+        db,
+        DataSource,
+        selectinload(DataSource.categories),
+        id=datasource_id,
+    )
+
+    if not datasource:
+        raise HTTPException(status_code=404, detail="Datasource not found")
+
+    return datasource
 
 async def list_datasources(
         db: AsyncSession,
