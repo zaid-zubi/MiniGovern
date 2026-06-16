@@ -101,6 +101,6 @@ async def delete_tag(tag_id: int,
                      language: Annotated[Language, Query()] = Language.EN,
                      db: AsyncSession = Depends(get_db),
                      current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...):
-    data = await tags.delete_tag(tag_id, db)
+    data = await tags.delete_tag(tag_id, db, current_user.id)
     return http_response(status=status.HTTP_200_OK,
                          message=ResponseMessages.TAGS.DELETED.get(language))

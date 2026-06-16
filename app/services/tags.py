@@ -17,7 +17,7 @@ from core.settings.exceptions.tag import (
 
 
 async def get_list_tags(db: AsyncSession, skip: int = 0, limit: int = 100):
-    logger.debug(f"Fetching tags list: skip={skip}, limit={limit}")
+    logger.info(f"Fetching tags list: skip={skip}, limit={limit}")
 
     result = await crud.get_all(db, Tag, skip=skip, limit=limit)
 
@@ -27,7 +27,7 @@ async def get_list_tags(db: AsyncSession, skip: int = 0, limit: int = 100):
 
 
 async def get_tag_by_name(db: AsyncSession, name: str):
-    logger.debug(f"Fetching tag by name: {name}")
+    logger.info(f"Fetching tag by name: {name}")
 
     result = await crud.get_one(db, Tag, name=name)
 
@@ -39,7 +39,7 @@ async def get_tag_by_name(db: AsyncSession, name: str):
 
 
 async def get_tag_by_id(db: AsyncSession, id: int, *options):
-    logger.debug(f"Fetching tag by id: {id}")
+    logger.info(f"Fetching tag by id: {id}")
 
     result = await crud.get_one(db, Tag, id=id, *options)
 
@@ -170,7 +170,7 @@ async def remove_tag_from_dataset(
 
 
 async def check_dataset_with_tag(dataset_id: int, tag_name: str, db: AsyncSession):
-    logger.debug(f"Checking relation: dataset_id={dataset_id}, tag={tag_name}")
+    logger.info(f"Checking relation: dataset_id={dataset_id}, tag={tag_name}")
 
     dataset = await get_dataset_with_tags(db, dataset_id)
     tag = await get_tag_by_name(db, tag_name)
@@ -186,6 +186,8 @@ async def delete_tag(
     logger.info(f"Deleting tag: id={tag_id}, actor_id={actor_id}")
 
     tag_data = await get_tag_by_id(db, tag_id)
+    if not tag_data:
+        raise TagNotFound
 
     await log_audit_action(
         db,
@@ -204,7 +206,7 @@ async def delete_tag(
 
 
 async def get_tag_with_datasets(tag_id: int, db: AsyncSession):
-    logger.debug(f"Fetching tag with datasets: id={tag_id}")
+    logger.info(f"Fetching tag with datasets: id={tag_id}")
 
     tag = await get_tag_by_id(db, tag_id, selectinload(Tag.datasets))
 

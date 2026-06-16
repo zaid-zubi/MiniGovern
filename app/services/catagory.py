@@ -8,7 +8,7 @@ from app.services.crud import crud
 from app.services.datasource import get_datasource_with_categories
 from core.logging import logger
 
-from core.settings.exceptions.category import (
+from core.settings.exceptions.dataset import (
     CategoryNotFound,
     CategoryAlreadyExists,
     CategoryAlreadyAssigned,
@@ -50,6 +50,9 @@ async def update_category(
         db: AsyncSession,
         actor_id: int,
 ):
+    existing = await crud.get_one(db, Category, id=category_id)
+    if not existing:
+        raise CategoryNotFound
     logger.info(f"Updating category: id={category_id}")
 
     await log_audit_action(
@@ -74,7 +77,7 @@ async def update_category(
 
 
 async def get_category(category_id: int, db: AsyncSession):
-    logger.debug(f"Fetching category: id={category_id}")
+    logger.info(f"Fetching category: id={category_id}")
 
     category = await crud.get_one(db, Category, id=category_id)
     if not category:
@@ -192,6 +195,3 @@ async def unassign_datasource_with_category(
     )
 
     return ListDataSourceWithCategories.model_validate(datasource)
-
-async def get_categories_list():
-    pass

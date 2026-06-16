@@ -12,27 +12,27 @@ from core.settings.exceptions.auth import UserAlreadyExists, IncorrectEmailOrPas
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    logger.debug(f"Fetching user by emails: {email}")
+    logger.info(f"Fetching user by emails: {email}")
     result = await db.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
 
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
-    logger.debug(f"Fetching user by id: {user_id}")
-    result = await db.execute(select(User).where(User.id == user_id))
-    return result.scalar_one_or_none()
+    logger.info(f"Fetching user by id: {user_id}")
+    result = await crud.get_one(db, User, id=user_id)
+    return result
 
 
 async def get_user(db: AsyncSession, user_id: int) -> UserRead:
     user = await get_user_by_id(db, user_id)
     if not user:
         logger.warning(f"User not found: {user_id}")
-        raise UserNotFound
+        raise UserNotFound()
     return UserRead.model_validate(user)
 
 
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User | None:
-    logger.debug(f"Authenticating user: {email}")
+    logger.info(f"Authenticating user: {email}")
     user = await get_user_by_email(db, email)
 
     if user is None:
@@ -76,7 +76,7 @@ async def register_and_create_user(body, admin, db):
 
 
 async def create_user(db: AsyncSession, body: UserCreate) -> UserRead:
-    logger.debug(f"Creating user in DB: {body.email}")
+    logger.info(f"Creating user in DB: {body.email}")
 
     user = User(
         email=body.email,
@@ -140,7 +140,7 @@ async def update_user(user_id: int, body: UserUpdate, actor_id: int, db: AsyncSe
 
 
 def parse_role_from_token(role_value: str) -> UserRole:
-    logger.debug(f"Parsing role from token: {role_value}")
+    logger.info(f"Parsing role from token: {role_value}")
 
     normalized = role_value.lower()
     for role in UserRole:
@@ -194,7 +194,7 @@ async def get_users(
         skip: int = 0,
         limit: int = 100,
 ):
-    logger.debug(f"Fetching users: skip={skip}, limit={limit}")
+    logger.info(f"Fetching users: skip={skip}, limit={limit}")
 
     result = await db.execute(
         select(User)

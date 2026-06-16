@@ -19,7 +19,7 @@ def get_mysql_engine(connection_url: str) -> AsyncEngine:
 
 
 async def get_tables(engine: AsyncEngine) -> list[str]:
-    logger.debug("Fetching tables from database")
+    logger.info("Fetching tables from database")
 
     query = text("""
         SELECT table_name
@@ -41,7 +41,7 @@ async def get_columns(
         engine: AsyncEngine,
         table_name: str,
 ) -> list[dict]:
-    logger.debug(f"Fetching columns for table: {table_name}")
+    logger.info(f"Fetching columns for table: {table_name}")
 
     query = text("""
         SELECT column_name, data_type
@@ -65,7 +65,7 @@ async def get_sample_rows(
         table_name: str,
         limit: int = 100,
 ) -> list[dict]:
-    logger.debug(
+    logger.info(
         f"Fetching sample rows: table={table_name}, limit={limit}"
     )
 

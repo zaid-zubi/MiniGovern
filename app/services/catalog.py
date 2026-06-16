@@ -6,6 +6,7 @@ from app.services.crud import crud
 from core.db.base import SensitivityLevel, UserRole
 from core.logging import logger
 from core.security.masking import mask_value, should_mask
+from core.settings.exceptions.catalog import DatasetNotFound
 
 
 async def get_or_create_table_catalog(
@@ -18,7 +19,7 @@ async def get_or_create_table_catalog(
     """
     Get or Create table catalog for scan job process
     """
-    logger.debug(
+    logger.info(
         f"Fetching table catalog: datasource_id={datasource_id}, "
         f"scan_job_id={scan_job_id}, table={table_name}"
     )
@@ -37,7 +38,7 @@ async def get_or_create_table_catalog(
         )
 
         if row_count is not None:
-            logger.debug(
+            logger.info(
                 f"Updating row_count for table {table_name}: {existing.row_count} -> {row_count}"
             )
             existing.row_count = row_count
@@ -66,21 +67,22 @@ async def get_or_create_table_catalog(
 
 
 async def upsert_column_catalog(
-        db: AsyncSession,
-        table_id: int,
-        column_name: str,
-        declared_type: str,
-        profile: dict,
-        sensitivity_level: SensitivityLevel = SensitivityLevel.NONE,
-        sensitivity_reason: str | None = None,
-        semantic_type: str | None = None,
-        valid_ratio: float | None = None,
-        enrichment_source: str | None = None,
+    db: AsyncSession,
+    table_id: int,
+    column_name: str,
+    declared_type: str,
+    profile: dict,
+    sensitivity_level: SensitivityLevel = SensitivityLevel.NONE,
+    sensitivity_reason: str | None = None,
+    semantic_type: str | None = None,
+    valid_ratio: float | None = None,
+    enrichment_source: str | None = None,
 ) -> ColumnCatalog:
     """
-    Get or Create column catalog for scan job process
+    Create or update a column catalog entry during scan.
     """
-    logger.debug(
+
+    logger.info(
         f"Fetching column catalog: table_id={table_id}, column={column_name}"
     )
 
@@ -88,7 +90,7 @@ async def upsert_column_catalog(
         db,
         ColumnCatalog,
         table_id=table_id,
-        column_name=column_name
+        column_name=column_name,
     )
 
     if existing:
@@ -96,17 +98,27 @@ async def upsert_column_catalog(
             f"Updating column catalog: id={existing.id}, column={column_name}"
         )
 
+        existing.declared_type = declared_type
         existing.profile = profile
         existing.sensitivity_level = sensitivity_level
         existing.sensitivity_reason = sensitivity_reason
-        existing.semantic_type = semantic_type
-        existing.valid_ratio = valid_ratio
-        existing.enrichment_source = enrichment_source
+
+        # Only overwrite enrichment fields when enrichment succeeded
+        if semantic_type is not None:
+            existing.semantic_type = semantic_type
+
+        if valid_ratio is not None:
+            existing.valid_ratio = valid_ratio
+
+        if enrichment_source is not None:
+            existing.enrichment_source = enrichment_source
 
         await db.flush()
 
-        logger.debug(
-            f"Column updated: id={existing.id}, sensitivity={sensitivity_level.value}"
+        logger.info(
+            f"Column updated: id={existing.id}, "
+            f"sensitivity={sensitivity_level.value}, "
+            f"semantic_type={existing.semantic_type}"
         )
 
         return existing
@@ -136,7 +148,6 @@ async def upsert_column_catalog(
 
     return column
 
-
 async def get_table_catalog(table_id: int, db: AsyncSession, user):
     result = await crud.get_one(
         db,
@@ -147,7 +158,7 @@ async def get_table_catalog(table_id: int, db: AsyncSession, user):
     )
 
     if not result:
-        return None
+        raise DatasetNotFound
 
     role = user.role
     is_admin = role == UserRole.ADMIN

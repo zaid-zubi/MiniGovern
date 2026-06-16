@@ -11,7 +11,7 @@ async def get_dataset(
         db: AsyncSession,
         dataset_id: int,
 ) -> Dataset:
-    logger.debug(f"Fetching dataset: id={dataset_id}")
+    logger.info(f"Fetching dataset: id={dataset_id}")
 
     dataset = await crud.get_one(db, Dataset, id=dataset_id)
 
@@ -22,7 +22,7 @@ async def get_dataset(
             detail="Dataset not found",
         )
 
-    logger.debug(f"Dataset found: id={dataset_id}, name={dataset.name}")
+    logger.info(f"Dataset found: id={dataset_id}, name={dataset.name}")
     return dataset
 
 
@@ -30,7 +30,7 @@ async def get_dataset_with_tags(
         db: AsyncSession,
         dataset_id: int,
 ) -> Dataset:
-    logger.debug(f"Fetching dataset with tags: id={dataset_id}")
+    logger.info(f"Fetching dataset with tags: id={dataset_id}")
 
     dataset = await crud.get_one(
         db,
@@ -46,7 +46,7 @@ async def get_dataset_with_tags(
             detail="Dataset not found",
         )
 
-    logger.debug(f"Dataset with tags loaded: id={dataset_id}, tags={len(dataset.tags)}")
+    logger.info(f"Dataset with tags loaded: id={dataset_id}, tags={len(dataset.tags)}")
     return dataset
 
 
@@ -63,7 +63,7 @@ async def get_datasets(
         skip: int = 0,
         limit: int = 50,
 ) -> list[Dataset]:
-    logger.debug(f"Listing datasets: skip={skip}, limit={limit}")
+    logger.info(f"Listing datasets: skip={skip}, limit={limit}")
 
     datasets = await crud.get_all(
         db,
@@ -113,7 +113,7 @@ async def get_or_create_dataset(
     """
     Get or Create dataset through Scan Job process
     """
-    logger.debug(
+    logger.info(
         f"Get or create dataset: table_catalog_id={table_catalog_id}, "
         f"table_name={table_name}"
     )

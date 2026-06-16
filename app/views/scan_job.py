@@ -50,9 +50,13 @@ async def create_scan_job(
 
 
 @router.get("/")
-async def get_scan_job(scan_job_id: int, db: AsyncSession = Depends(get_db)):
-    scan_job = await crud.get_one(db, ScanJob, id=scan_job_id)
-    return jsonable_encoder(scan_job)
+async def get_scan_job(scan_job_id: int,
+                       db: Annotated[AsyncSession, Depends(get_db)],
+                       language: Annotated[Language,Query()] = Language.EN):
+    data = await get_scan_job_status(db, scan_job_id)
+    return http_response(status=status.HTTP_200_OK,
+                         message=ResponseMessages.GENERAL.READ.get(language),
+                         data=data)
 
 
 @router.get("/{scan_job_id}/status")

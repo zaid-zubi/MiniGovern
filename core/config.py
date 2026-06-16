@@ -33,5 +33,7 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     email_from: str = "noreply@minigovern.local"
 
+    country_api: str = "https://restcountries.com/v3.1/name"
+
 
 settings = Settings()

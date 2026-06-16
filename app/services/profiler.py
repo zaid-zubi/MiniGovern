@@ -5,7 +5,7 @@ from core.logging import logger
 
 
 def profile_column(rows: list[dict], column_name: str) -> dict:
-    logger.debug(
+    logger.info(
         f"Profiling column: {column_name}, rows={len(rows)}"
     )
 
@@ -28,7 +28,7 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
     }
 
     if not non_null_values:
-        logger.debug(
+        logger.info(
             f"Column profile completed: {column_name} (all values null)"
         )
         return result
@@ -56,7 +56,7 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
             "example_values": list(dict.fromkeys(non_null_values))[:5],
         })
 
-    logger.debug(
+    logger.info(
         f"Column profile completed: {column_name} | "
         f"rows={total}, nulls={null_count}, distinct={distinct_count}"
     )

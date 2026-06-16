@@ -39,7 +39,7 @@ async def log_audit_action(
     else:
         db.add(audit)
 
-    logger.debug(
+    logger.info(
         f"AUDIT created in memory: action={action}, entity={entity_type}, id={entity_id}"
     )
 

@@ -60,7 +60,7 @@ async def create_scan_job(
 
 
 async def get_scan_job(scan_job_id: int, db: AsyncSession) -> ScanJob:
-    logger.debug(f"Fetching scan job: id={scan_job_id}")
+    logger.info(f"Fetching scan job: id={scan_job_id}")
 
     scan_job = await crud.get_one(db, ScanJob, id=scan_job_id)
 
@@ -68,7 +68,7 @@ async def get_scan_job(scan_job_id: int, db: AsyncSession) -> ScanJob:
         logger.warning(f"Scan job not found: id={scan_job_id}")
         raise ScanJobNotFound(f"Scan job {scan_job_id} not found")
 
-    logger.debug(f"Scan job found: id={scan_job_id}, status={scan_job.status}")
+    logger.info(f"Scan job found: id={scan_job_id}, status={scan_job.status}")
 
     return scan_job
 

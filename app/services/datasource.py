@@ -65,7 +65,7 @@ async def create_datasource(
 
 
 async def _get_datasource(db: AsyncSession, datasource_id: int):
-    logger.debug(f"Fetching datasource: id={datasource_id}")
+    logger.info(f"Fetching datasource: id={datasource_id}")
 
     datasource = await crud.get_one(db, DataSource, id=datasource_id)
 
@@ -73,7 +73,7 @@ async def _get_datasource(db: AsyncSession, datasource_id: int):
         logger.warning(f"Datasource not found: id={datasource_id}")
         raise DatasourceNotFound(f"Datasource {datasource_id} not found")
 
-    logger.debug(f"Datasource found: id={datasource_id}, name={datasource.name}")
+    logger.info(f"Datasource found: id={datasource_id}, name={datasource.name}")
     return datasource
 
 
@@ -86,7 +86,7 @@ async def get_datasource_with_categories(
         db: AsyncSession,
         datasource_id: int,
 ):
-    logger.debug(f"Fetching datasource with categories: id={datasource_id}")
+    logger.info(f"Fetching datasource with categories: id={datasource_id}")
 
     datasource = await crud.get_one(
         db,
@@ -99,7 +99,7 @@ async def get_datasource_with_categories(
         logger.warning(f"Datasource not found (with categories): id={datasource_id}")
         raise DatasourceNotFound(f"Datasource {datasource_id} not found")
 
-    logger.debug(
+    logger.info(
         f"Datasource loaded with categories: id={datasource_id}, "
         f"categories={len(datasource.categories)}"
     )
@@ -107,7 +107,7 @@ async def get_datasource_with_categories(
     return datasource
 
 async def list_datasources(db: AsyncSession, *, skip: int = 0, limit: int = 100):
-    logger.debug(f"Listing datasources: skip={skip}, limit={limit}")
+    logger.info(f"Listing datasources: skip={skip}, limit={limit}")
 
     datasources = await crud.get_all(
         db,
@@ -149,10 +149,10 @@ async def update_datasource(
     updates = body.model_dump(exclude_unset=True)
 
     if "password" in updates:
-        logger.debug("Encrypting updated password for datasource")
+        logger.info("Encrypting updated password for datasource")
         updates["encrypted_password"] = encrypt_value(updates.pop("password"))
 
-    logger.debug(f"Applying updates: {list(updates.keys())}")
+    logger.info(f"Applying updates: {list(updates.keys())}")
 
     for key, value in updates.items():
         setattr(datasource, key, value)
@@ -214,7 +214,7 @@ async def delete_datasource(db: AsyncSession, datasource_id: int, actor: User):
 
 
 def build_mysql_connection_url(datasource: DataSource):
-    logger.debug(f"Building MySQL connection URL: id={datasource.id}")
+    logger.info(f"Building MySQL connection URL: id={datasource.id}")
 
     password = decrypt_value(datasource.encrypted_password)
 
@@ -270,7 +270,7 @@ async def test_connection(datasource_id: int, db: AsyncSession):
     finally:
         if engine:
             await engine.dispose()
-            logger.debug(f"Engine disposed: datasource_id={datasource_id}")
+            logger.info(f"Engine disposed: datasource_id={datasource_id}")
 
 async def get_datasource_catalog(
         db: AsyncSession,
@@ -287,8 +287,10 @@ async def get_datasource_catalog(
         .selectinload(TableCatalog.columns),
         id=datasource_id,
     )
+    if not datasource:
+        raise DatasourceNotFound
 
-    logger.debug(
+    logger.info(
         f"Catalog requested for datasource: id={datasource_id}"
     )
 
@@ -323,3 +325,4 @@ async def get_datasource_catalog(
             for table in datasource.tables
         ],
     }
+
