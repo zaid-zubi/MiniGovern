@@ -10,6 +10,8 @@ class Permission(str, enum.Enum):
     DATASOURCE_WRITE = "datasource:write"
     DATASET_READ = "dataset:read"
     DATASET_WRITE = "dataset:write"
+    DATASET_APPROVE = "dataset:approve"
+
     SCAN_TRIGGER = "scan:trigger"
     SCAN_READ = "scan:read"
     AUDIT_READ = "audit:read"

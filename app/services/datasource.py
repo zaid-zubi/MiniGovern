@@ -2,6 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import selectinload
 
+from app.models import TableCatalog
 from app.models.datasource import DataSource
 from app.models.user import User
 from app.schemas.datasource import (
@@ -105,7 +106,6 @@ async def get_datasource_with_categories(
     )
 
     return datasource
-
 
 async def list_datasources(db: AsyncSession, *, skip: int = 0, limit: int = 100):
     logger.debug(f"Listing datasources: skip={skip}, limit={limit}")
@@ -246,12 +246,16 @@ async def test_connection(datasource_id: int, db: AsyncSession):
     datasource = await crud.get_one(db, DataSource, id=datasource_id)
 
     if not datasource:
-        logger.warning(f"Connection test failed - datasource not found: id={datasource_id}")
+        logger.warning(
+            f"Connection test failed - datasource not found: id={datasource_id}"
+        )
         raise DatasourceNotFound(f"Datasource {datasource_id} not found")
 
-    engine = await create_mysql_engine(datasource)
+    engine = None
 
     try:
+        engine = await create_mysql_engine(datasource)
+
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
 
@@ -262,8 +266,61 @@ async def test_connection(datasource_id: int, db: AsyncSession):
         logger.error(
             f"Connection failed: datasource_id={datasource_id}, error={str(e)}"
         )
-        raise DatasourceConnectionFailed(str(e))
+        raise DatasourceConnectionFailed()
 
     finally:
-        await engine.dispose()
-        logger.debug(f"Engine disposed: datasource_id={datasource_id}")
+        if engine:
+            await engine.dispose()
+            logger.debug(f"Engine disposed: datasource_id={datasource_id}")
+
+async def get_datasource_catalog(
+        db: AsyncSession,
+        datasource_id: int,
+):
+    logger.info(
+        f"Fetching datasource catalog: datasource_id={datasource_id}"
+    )
+
+    datasource = await crud.get_one(
+        db,
+        DataSource,
+        selectinload(DataSource.tables)
+        .selectinload(TableCatalog.columns),
+        id=datasource_id,
+    )
+
+    logger.debug(
+        f"Catalog requested for datasource: id={datasource_id}"
+    )
+
+    return {
+        "datasource_id": datasource.id,
+        "datasource_name": datasource.name,
+        "tables": [
+            {
+                "id": table.id,
+                "name": table.table_name,
+                "row_count": table.row_count,
+                "scan_job_id": table.scan_job_id,
+                "columns": [
+                    {
+                        "id": column.id,
+                        "name": column.column_name,
+                        "declared_type": column.declared_type,
+                        "profile": column.profile,
+                        "sensitivity_level": (
+                            column.sensitivity_level.value
+                            if column.sensitivity_level
+                            else None
+                        ),
+                        "sensitivity_reason": column.sensitivity_reason,
+                        "semantic_type": column.semantic_type,
+                        "valid_ratio": column.valid_ratio,
+                        "enrichment_source": column.enrichment_source,
+                    }
+                    for column in table.columns
+                ],
+            }
+            for table in datasource.tables
+        ],
+    }

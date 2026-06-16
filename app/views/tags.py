@@ -54,8 +54,8 @@ async def create_tag(name: str,
                          data=data)
 
 
-@router.get("/datasets")
-async def get_tag_with_datasets(tag_id: int = None,
+@router.get("/datasets/{tag_id}")
+async def get_tag_with_datasets(tag_id: int,
                                 language: Annotated[Language, Query()] = Language.EN,
                                 db: AsyncSession = Depends(get_db),
                                 current_user: Annotated[

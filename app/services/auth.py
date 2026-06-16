@@ -24,6 +24,14 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_user(db: AsyncSession, user_id: int) -> UserRead:
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        logger.warning(f"User not found: {user_id}")
+        raise UserNotFound
+    return UserRead.model_validate(user)
+
+
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User | None:
     logger.debug(f"Authenticating user: {email}")
     user = await get_user_by_email(db, email)
@@ -84,7 +92,7 @@ async def create_user(db: AsyncSession, body: UserCreate) -> UserRead:
 
     logger.info(f"User persisted in DB: id={user.id}, email={user.email}")
 
-    return UserRead.model_validate(user)
+    return user
 
 
 async def update_user(user_id: int, body: UserUpdate, actor_id: int, db: AsyncSession):
@@ -143,6 +151,7 @@ def parse_role_from_token(role_value: str) -> UserRole:
     logger.error(f"Unknown role received: {role_value}")
     raise ValueError(f"Unknown role: {role_value}")
 
+
 async def login_user(form_data, db):
     logger.info(f"Login attempt: {form_data.username}")
 
@@ -179,3 +188,54 @@ async def login_user(form_data, db):
     )
 
     return TokenResponse(access_token=access_token)
+
+
+async def get_users(
+        db: AsyncSession,
+        skip: int = 0,
+        limit: int = 100,
+):
+    logger.debug(f"Fetching users: skip={skip}, limit={limit}")
+
+    result = await db.execute(
+        select(User)
+        .offset(skip)
+        .limit(limit)
+    )
+
+    users = result.scalars().all()
+
+    logger.info(f"Users fetched: count={len(users)}")
+
+    return [UserRead.model_validate(user) for user in users]
+
+
+async def delete_user(
+        db: AsyncSession,
+        user_id: int,
+        actor_id: int,
+):
+    logger.info(f"Deleting user: id={user_id}")
+
+    user = await get_user_by_id(db, user_id)
+
+    await db.delete(user)
+
+    await log_audit_action(
+        db,
+        actor_id=actor_id,
+        action="delete",
+        entity_type="user",
+        entity_id=user_id,
+        details={
+            "email": user.email,
+            "role": user.role.value,
+        },
+        can_commit=True
+    )
+
+    await db.commit()
+
+    logger.info(f"User deleted successfully: id={user_id}")
+
+    return {"deleted_id": user_id}

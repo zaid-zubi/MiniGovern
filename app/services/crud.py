@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import delete, select
@@ -60,6 +60,36 @@ class CRUD:
             limit: int = 100,
     ) -> list[ModelType]:
         result = await db.execute(select(table).offset(skip).limit(limit))
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def get_all_with_filters(
+            db: AsyncSession,
+            table: type[ModelType],
+            *,
+            skip: int = 0,
+            limit: int = 100,
+            options: Optional[list[Any]] = None,
+            **filters,
+    ) -> list[ModelType]:
+
+        stmt = select(table).offset(skip).limit(limit)
+
+        if options:
+            stmt = stmt.options(*options)
+
+        for field, value in filters.items():
+            if not hasattr(table, field):
+                raise ValueError(f"Invalid filter field: {field}")
+
+            column = getattr(table, field)
+
+            if value is None:
+                stmt = stmt.where(column.is_(None))
+            else:
+                stmt = stmt.where(column == value)
+
+        result = await db.execute(stmt)
         return list(result.scalars().all())
 
     @staticmethod

@@ -1,18 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps.auth import get_current_active_user, require_permission
+from app.deps.auth import require_permission
 from app.models.user import User
-from app.schemas.datasource import DataSourceCreate, DataSourceRead, DataSourceUpdate
+from app.schemas.datasource import DataSourceCreate, DataSourceUpdate
 from app.schemas.language import Language
 from app.services.datasource import (
     create_datasource,
     delete_datasource,
     get_datasource,
     list_datasources,
-    update_datasource, test_connection,
+    update_datasource, test_connection, get_datasource_catalog,
 )
 from core.db.session import get_db
 from core.rbac import Permission
@@ -34,6 +34,7 @@ async def read_datasources(
     return http_response(status=status.HTTP_200_OK,
                          message=ResponseMessages.DATASOURCE.READ.get(language),
                          data=data)
+
 
 @router.get("/{datasource_id}")
 async def read_datasource(
@@ -92,3 +93,21 @@ async def remove_datasource(
 async def test_connection_datasource(datasource_id: int, db: AsyncSession = Depends(get_db)):
     test_conn = await test_connection(datasource_id, db)
     return test_conn
+
+
+@router.get("/{datasource_id}/catalog")
+async def read_datasource_catalog(
+        datasource_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        current_user: Annotated[
+            User,
+            Depends(require_permission(Permission.DATASOURCE_READ))
+        ],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await get_datasource_catalog(db, datasource_id)
+    return http_response(
+        status=status.HTTP_200_OK,
+        message=ResponseMessages.GENERAL.READ.get(language),
+        data=data
+    )

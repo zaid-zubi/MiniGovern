@@ -6,7 +6,8 @@ from app.models import Dataset
 from app.services.crud import crud
 from core.db.base import WorkflowState
 from core.logging import logger
-
+from app.services.audit import log_audit_action
+from app.models.audit import AuditLog
 
 async def get_dataset(
         db: AsyncSession,
@@ -144,14 +145,34 @@ async def get_or_create_dataset(
 async def approve_dataset(
         db: AsyncSession,
         dataset_id: int,
+        actor_id: int,
 ) -> Dataset:
     logger.info(f"Approving dataset: id={dataset_id}")
 
     dataset = await get_dataset(db, dataset_id)
 
+    if dataset.workflow_state != WorkflowState.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only submitted datasets can be approved",
+        )
+
     dataset.workflow_state = WorkflowState.APPROVED
 
-    await crud.update(db, Dataset, dataset_id, dataset)
+    await db.flush()
+
+    await log_audit_action(
+        db=db,
+        actor_id=actor_id,
+        action="DATASET_APPROVED",
+        entity_type="Dataset",
+        entity_id=dataset.id,
+        details={
+            "dataset_name": dataset.name,
+            "workflow_state": dataset.workflow_state.value,
+        },
+    )
+    result = await crud.commit(db, instance=dataset)
 
     logger.info(f"Dataset approved: id={dataset_id}")
 
@@ -161,17 +182,103 @@ async def approve_dataset(
 async def reject_dataset(
         db: AsyncSession,
         dataset_id: int,
+        actor_id: int,
         reason: str | None = None,
 ) -> Dataset:
-    logger.info(f"Rejecting dataset: id={dataset_id}, reason={reason}")
+    logger.info(
+        f"Rejecting dataset: id={dataset_id}, reason={reason}"
+    )
 
     dataset = await get_dataset(db, dataset_id)
+
+    if dataset.workflow_state != WorkflowState.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only submitted datasets can be rejected",
+        )
 
     dataset.workflow_state = WorkflowState.REJECTED
     dataset.rejection_comment = reason
 
-    await crud.update(db, Dataset, dataset_id, dataset)
+    await db.flush()
 
+    await log_audit_action(
+        db=db,
+        actor_id=actor_id,
+        action="DATASET_REJECTED",
+        entity_type="Dataset",
+        entity_id=dataset.id,
+        details={
+            "dataset_name": dataset.name,
+            "reason": reason,
+            "workflow_state": dataset.workflow_state.value,
+        },
+    )
+    result = await crud.commit(db, dataset)
     logger.info(f"Dataset rejected: id={dataset_id}")
 
     return dataset
+
+
+async def submit_dataset(
+        db: AsyncSession,
+        dataset_id: int,
+        actor_id: int,
+) -> Dataset:
+    logger.info(f"Submitting dataset: id={dataset_id}")
+
+    dataset = await get_dataset(db, dataset_id)
+
+    if dataset.workflow_state not in (
+            WorkflowState.DRAFT,
+            WorkflowState.REJECTED,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dataset cannot be submitted",
+        )
+
+    dataset.workflow_state = WorkflowState.SUBMITTED
+
+    await db.flush()
+
+    await log_audit_action(
+        db=db,
+        actor_id=actor_id,
+        action="DATASET_SUBMITTED",
+        entity_type="Dataset",
+        entity_id=dataset.id,
+        details={
+            "dataset_name": dataset.name,
+            "workflow_state": dataset.workflow_state.value,
+        },
+    )
+    result = await crud.commit(db, dataset)
+
+    logger.info(f"Dataset submitted: id={dataset_id}")
+
+    return dataset
+
+async def get_dataset_audit_logs(
+        db: AsyncSession,
+        dataset_id: int,
+):
+    await get_dataset(db, dataset_id)
+
+    logs = await crud.get_all_with_filters(
+        db,
+        AuditLog,
+        entity_type="Dataset",
+        entity_id=dataset_id,
+    )
+
+    return [
+        {
+            "id": log.id,
+            "action": log.action,
+            "actor_id": log.actor_id,
+            "details": log.details,
+            "created_at": log.created_at,
+        }
+        for log in logs
+    ]

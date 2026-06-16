@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.auth import get_current_active_user, require_roles
 from app.models.user import User
-from app.schemas.auth import TokenResponse, UserCreate, UserRead, UserUpdate
+from app.schemas.auth import UserCreate, UserRead, UserUpdate
 from app.schemas.language import Language
 from app.services.auth import (
-    update_user, register_and_create_user, login_user,
+    update_user, register_and_create_user, login_user, get_users, delete_user, get_user as read_user
 )
 from core.db.base import UserRole
 from core.db.session import get_db
@@ -63,3 +63,52 @@ async def patch_user(
     return http_response(status=status.HTTP_201_CREATED,
                          message=ResponseMessages.GENERAL.UPDATE.get(language),
                          data=data)
+
+
+@router.get("/users")
+async def list_users(
+        db: Annotated[AsyncSession, Depends(get_db)],
+        admin: Annotated[User, Depends(require_roles(UserRole.ADMIN))],
+        language: Annotated[Language, Query()] = Language.EN,
+        skip: int = Query(default=0, ge=0),
+        limit: int = Query(default=100, ge=1, le=200),
+):
+    data = await get_users(db, skip=skip, limit=limit)
+
+    return http_response(
+        status=status.HTTP_200_OK,
+        message=ResponseMessages.GENERAL.READ.get(language),
+        data=data,
+    )
+
+
+@router.get("/users/{user_id}")
+async def get_user(
+        user_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        admin: Annotated[User, Depends(require_roles(UserRole.ADMIN))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await read_user(db, user_id)
+
+    return http_response(
+        status=status.HTTP_200_OK,
+        message=ResponseMessages.GENERAL.READ.get(language),
+        data=data,
+    )
+
+
+@router.delete("/users/{user_id}")
+async def remove_user(
+        user_id: int,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        admin: Annotated[User, Depends(require_roles(UserRole.ADMIN))],
+        language: Annotated[Language, Query()] = Language.EN,
+):
+    data = await delete_user(db, user_id, admin.id)
+
+    return http_response(
+        status=status.HTTP_200_OK,
+        message=ResponseMessages.GENERAL.DELETE.get(language),
+        data=data,
+    )

@@ -22,12 +22,23 @@ class ResponseMessages:
         ASSIGN = {"en": "Category Assigned Successfully", "ar": "تم تعيين الفئة بنجاح"}
         UNASSIGN = {"en": "Category Unassigned Successfully", "ar": "تم الغاء تعيين الفئة بنجاح"}
         UPDATED = {"en": "Category Updated Successfully", "ar": "تم تعديل الفئة بنجاح"}
+
     class DATASOURCE:
         READ = {"en": "Datasource retrieved successfully", "ar": "تم جلب مصدر البيانات بنجاح"}
         CREATE = {"en": "Datasource created successfully", "ar": "تم اضافة مصدر البيانات بنجاح"}
         UPDATE = {"en": "Datasource updated successfully", "ar": "تم تعديل مصدر البيانات بنجاح"}
         DELETE = {"en": "Datasource deleted successfully", "ar": "تم حذف مصدر البيانات بنجاح"}
 
+    class DATASET:
+        READ = {"en": "Dataset retrieved successfully", "ar": "تم جلب مجموعة البيانات بنجاح"}
+        READ_LIST = {"en": "Datasets retrieved successfully", "ar": "تم جلب مجموعات البيانات بنجاح"}
+        APPROVE = {"en": "Dataset approved successfully", "ar": "تمت الموافقة على مجموعة البيانات بنجاح"}
+        SUBMIT = {"en": "Dataset submitted successfully", "ar": "تم إرسال مجموعة البيانات بنجاح"}
+        REJECT = {"en": "Dataset rejected successfully", "ar": "تم رفض مجموعة البيانات بنجاح"}
+
+
+
 class Error:
     USER_NOT_FOUND = "User not found"
     INCORRECT_EMAIL_OR_PASSWORD = "Incorrect email or password"
+    DATABASE_CONNECTION_FAILUER = "Connection with Datasource is failed..."

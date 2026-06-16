@@ -1,10 +1,10 @@
 from sqlalchemy import ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.db.base import Base
+from core.db.base import Base, TimestampMixin
 
 
-class AuditLog(Base):
+class AuditLog(Base, TimestampMixin):
     __tablename__ = "audit_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -1,4 +1,6 @@
 from typing import Any
+from numbers import Number
+
 from core.logging import logger
 
 
@@ -8,6 +10,7 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
     )
 
     values = [row.get(column_name) for row in rows]
+    non_null_values = [v for v in values if v is not None]
 
     total = len(values)
 
@@ -21,13 +24,41 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
         "null_count": null_count,
         "null_percentage": null_percentage,
         "distinct_count": distinct_count,
-        "valid_ratio": valid_ratio
+        "valid_ratio": valid_ratio,
     }
+
+    if not non_null_values:
+        logger.debug(
+            f"Column profile completed: {column_name} (all values null)"
+        )
+        return result
+
+    sample_value = non_null_values[0]
+
+    if isinstance(sample_value, Number):
+        numeric_values = [
+            v for v in non_null_values
+            if isinstance(v, Number)
+        ]
+
+        result.update({
+            "min": min(numeric_values),
+            "max": max(numeric_values),
+            "mean": round(sum(numeric_values) / len(numeric_values), 4),
+        })
+
+    elif isinstance(sample_value, str):
+        lengths = [len(v) for v in non_null_values if isinstance(v, str)]
+
+        result.update({
+            "min_length": min(lengths),
+            "max_length": max(lengths),
+            "example_values": list(dict.fromkeys(non_null_values))[:5],
+        })
 
     logger.debug(
         f"Column profile completed: {column_name} | "
-        f"rows={total}, nulls={null_count}, distinct={distinct_count}, "
-        f"valid_ratio={valid_ratio}"
+        f"rows={total}, nulls={null_count}, distinct={distinct_count}"
     )
 
     return result

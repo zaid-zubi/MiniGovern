@@ -156,7 +156,7 @@ async def get_scan_job_status(
         db: AsyncSession,
         scan_job_id: int
 ):
-    job = await crud.get_one(db, ScanJob, scan_job_id)
+    job = await crud.get_one(db, ScanJob, id=scan_job_id)
 
     if not job:
         raise ScanJobNotFound()
