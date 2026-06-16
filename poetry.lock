@@ -20,6 +20,22 @@ rsa = ["PyMySQL[rsa] (>=1.0)"]
 sa = ["sqlalchemy (>=1.3,<1.4)"]
 
 [[package]]
+name = "aiosmtpd"
+version = "1.4.6"
+description = "aiosmtpd - asyncio based SMTP server"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "aiosmtpd-1.4.6-py3-none-any.whl", hash = "sha256:72c99179ba5aa9ae0abbda6994668239b64a5ce054471955fe75f581d2592475"},
+    {file = "aiosmtpd-1.4.6.tar.gz", hash = "sha256:5a811826e1a5a06c25ebc3e6c4a704613eb9a1bcf6b78428fbe865f4f6c9a4b8"},
+]
+
+[package.dependencies]
+atpublic = "*"
+attrs = "*"
+
+[[package]]
 name = "aiosmtplib"
 version = "5.1.1"
 description = "asyncio SMTP client"
@@ -276,6 +292,30 @@ files = [
 
 [package.extras]
 gssauth = ["gssapi ; platform_system != \"Windows\"", "sspilib ; platform_system == \"Windows\""]
+
+[[package]]
+name = "atpublic"
+version = "7.0.0"
+description = "Keep all y'all's __all__'s in sync"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "atpublic-7.0.0-py3-none-any.whl", hash = "sha256:6702bd9e7245eb4e8220a3e222afcef7f87412154732271ee7deee4433b72b4b"},
+    {file = "atpublic-7.0.0.tar.gz", hash = "sha256:466ef10d0c8bbd14fd02a5fbd5a8b6af6a846373d91106d3a07c16d72d96b63e"},
+]
+
+[[package]]
+name = "attrs"
+version = "26.1.0"
+description = "Classes Without Boilerplate"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "attrs-26.1.0-py3-none-any.whl", hash = "sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309"},
+    {file = "attrs-26.1.0.tar.gz", hash = "sha256:d03ceb89cb322a8fd706d4fb91940737b6642aa36998fe130a9bc96c985eff32"},
+]
 
 [[package]]
 name = "bcrypt"
@@ -2117,4 +2157,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "9de824a30cc13892f0c1524403b891d0e3ac50ec7dfd5f6c36d20e55bda025af"
+content-hash = "242eee1d3e44decd5b048025258563e2f72acc6d0e3d8e6002f32e2950511bcd"

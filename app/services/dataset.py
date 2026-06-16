@@ -1,14 +1,12 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models import Dataset
-from app.services.crud import crud
+from app.services.emails.email_notification import notify_admins_dataset_submitted, \
+    notify_owner_dataset_approved, notify_owner_dataset_rejected
 from core.db.base import WorkflowState
-from core.logging import logger
 from app.services.audit import log_audit_action
 from app.models.audit import AuditLog
-
 async def get_dataset(
         db: AsyncSession,
         dataset_id: int,
@@ -146,6 +144,7 @@ async def approve_dataset(
         db: AsyncSession,
         dataset_id: int,
         actor_id: int,
+        background_tasks: BackgroundTasks,
 ) -> Dataset:
     logger.info(f"Approving dataset: id={dataset_id}")
 
@@ -172,7 +171,14 @@ async def approve_dataset(
             "workflow_state": dataset.workflow_state.value,
         },
     )
-    result = await crud.commit(db, instance=dataset)
+
+    await crud.commit(db, instance=dataset)
+
+    background_tasks.add_task(
+        notify_owner_dataset_approved,
+        db,
+        dataset,
+    )
 
     logger.info(f"Dataset approved: id={dataset_id}")
 
@@ -183,6 +189,7 @@ async def reject_dataset(
         db: AsyncSession,
         dataset_id: int,
         actor_id: int,
+        background_tasks: BackgroundTasks,
         reason: str | None = None,
 ) -> Dataset:
     logger.info(
@@ -215,6 +222,12 @@ async def reject_dataset(
         },
     )
     result = await crud.commit(db, dataset)
+
+    background_tasks.add_task(
+        notify_owner_dataset_rejected,
+        db,
+        dataset,
+    )
     logger.info(f"Dataset rejected: id={dataset_id}")
 
     return dataset
@@ -224,6 +237,7 @@ async def submit_dataset(
         db: AsyncSession,
         dataset_id: int,
         actor_id: int,
+        background_tasks: BackgroundTasks,
 ) -> Dataset:
     logger.info(f"Submitting dataset: id={dataset_id}")
 
@@ -253,7 +267,15 @@ async def submit_dataset(
             "workflow_state": dataset.workflow_state.value,
         },
     )
-    result = await crud.commit(db, dataset)
+
+    await crud.commit(db, dataset)
+
+
+    background_tasks.add_task(
+        notify_admins_dataset_submitted,
+        db,
+        dataset,
+    )
 
     logger.info(f"Dataset submitted: id={dataset_id}")
 

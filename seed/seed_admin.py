@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.models.user import User
 from core.db.base import UserRole
 from core.db.session import AsyncSessionLocal
-from core.security import hash_password
+from core.security.security import hash_password
 
 
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
@@ -28,11 +28,11 @@ def validate_password(password: str) -> tuple[bool, str]:
 async def create_admin():
     print("\n**** Create your default Admin account ****\n")
 
-    email = await asyncio.to_thread(input, "Enter admin email: ")
+    email = await asyncio.to_thread(input, "Enter admin emails: ")
     email = email.strip()
 
     if not validate_email(email):
-        print("❌ Invalid email format")
+        print("❌ Invalid emails format")
         return
 
     password = getpass.getpass("Enter admin password: ").strip()
@@ -54,7 +54,7 @@ async def create_admin():
         existing = result.scalar_one_or_none()
 
         if existing:
-            print("⚠️ Admin already exists with this email")
+            print("⚠️ Admin already exists with this emails")
             return
 
         admin = User(

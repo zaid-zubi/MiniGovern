@@ -40,5 +40,5 @@ class ResponseMessages:
 
 class Error:
     USER_NOT_FOUND = "User not found"
-    INCORRECT_EMAIL_OR_PASSWORD = "Incorrect email or password"
+    INCORRECT_EMAIL_OR_PASSWORD = "Incorrect emails or password"
     DATABASE_CONNECTION_FAILUER = "Connection with Datasource is failed..."

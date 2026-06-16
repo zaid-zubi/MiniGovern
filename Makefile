@@ -2,7 +2,7 @@ install:
 	poetry install
 
 activate:
-	poerty env activate
+	poetry env activate
 
 defaultAdmin:
 	python -m seed.seed_admin
@@ -33,3 +33,6 @@ run:
 
 worker:
 	@echo "Using FastAPI BackgroundTasks - no separate worker required"
+
+smtp:
+	python -m aiosmtpd -n -l localhost:1025

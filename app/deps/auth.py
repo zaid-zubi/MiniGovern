@@ -10,7 +10,7 @@ from app.services.auth import get_user_by_id, parse_role_from_token
 from core.db.base import UserRole
 from core.db.session import get_db
 from core.rbac import Permission, role_at_least, role_has_permission
-from core.security import decode_access_token
+from core.security.security import decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 

@@ -4,7 +4,7 @@ from core.logging import logger
 import re
 
 PII_RULES = {
-    "email": SensitivityLevel.PII,
+    "emails": SensitivityLevel.PII,
     "e-mail": SensitivityLevel.PII,
     "phone": SensitivityLevel.PII,
     "mobile": SensitivityLevel.PII,
@@ -52,7 +52,7 @@ def classify_value(value) -> SensitivityLevel | None:
         return None
 
     if is_email(value):
-        logger.debug("Value classified as PII (email pattern match)")
+        logger.debug("Value classified as PII (emails pattern match)")
         return SensitivityLevel.PII
 
     if is_phone(value):

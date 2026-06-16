@@ -28,6 +28,7 @@ bcrypt = "4.1.2"
 pymysql = "^1.2.0"
 python-multipart = "^0.0.32"
 aiomysql = "^0.3.2"
+aiosmtpd = "^1.4.6"
 
 [build-system]
 requires = ["poetry-core"]

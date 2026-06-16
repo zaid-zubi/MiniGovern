@@ -8,12 +8,11 @@ from app.models.user import User
 from app.schemas.datasource import (
     DataSourceCreate,
     DataSourceUpdate,
-    ListDataSourceWithCategories,
     DataSourceRead,
 )
 from app.services.audit import log_audit_action
 from app.services.crud import crud
-from core.encryption import encrypt_value, decrypt_value
+from core.security.encryption import encrypt_value, decrypt_value
 from core.logging import logger
 
 from core.settings.exceptions.datasource import (

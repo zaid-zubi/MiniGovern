@@ -27,5 +27,11 @@ class Settings(BaseSettings):
 
     encryption_key: str
 
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    email_from: str = "noreply@minigovern.local"
+
 
 settings = Settings()

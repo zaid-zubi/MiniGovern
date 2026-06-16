@@ -30,7 +30,7 @@ def create_access_token(
     )
     payload: dict[str, Any] = {
         "sub": subject,
-        "email": email,
+        "emails": email,
         "role": role,
         "exp": expire,
     }

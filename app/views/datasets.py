@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.auth import require_permission
@@ -59,6 +59,7 @@ async def read_dataset(
 async def submit_dataset_endpoint(
         dataset_id: int,
         db: Annotated[AsyncSession, Depends(get_db)],
+        background_tasks: BackgroundTasks,
         current_user: Annotated[
             User,
             Depends(require_permission(Permission.DATASET_WRITE))
@@ -69,6 +70,7 @@ async def submit_dataset_endpoint(
         db=db,
         dataset_id=dataset_id,
         actor_id=current_user.id,
+        background_tasks=background_tasks,
     )
 
     return http_response(
@@ -82,6 +84,7 @@ async def submit_dataset_endpoint(
 async def approve_dataset_endpoint(
         dataset_id: int,
         db: Annotated[AsyncSession, Depends(get_db)],
+        background_tasks: BackgroundTasks,
         current_user: Annotated[
             User,
             Depends(require_permission(Permission.DATASET_APPROVE))
@@ -92,6 +95,7 @@ async def approve_dataset_endpoint(
         db=db,
         dataset_id=dataset_id,
         actor_id=current_user.id,
+        background_tasks=background_tasks,
     )
 
     return http_response(
@@ -105,6 +109,7 @@ async def approve_dataset_endpoint(
 async def reject_dataset_endpoint(
         dataset_id: int,
         db: Annotated[AsyncSession, Depends(get_db)],
+        background_tasks: BackgroundTasks,
         current_user: Annotated[
             User,
             Depends(require_permission(Permission.DATASET_APPROVE))
@@ -115,6 +120,7 @@ async def reject_dataset_endpoint(
         db=db,
         dataset_id=dataset_id,
         actor_id=current_user.id,
+        background_tasks=background_tasks,
     )
 
     return http_response(

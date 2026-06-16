@@ -1,19 +1,18 @@
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserUpdate, UserRead, TokenResponse
-from app.schemas.language import Language
 from app.services.audit import log_audit_action
+from app.services.crud import crud
 from core.db.base import UserRole
-from core.security import hash_password, verify_password, create_access_token
+from core.security.security import hash_password, verify_password, create_access_token
 from core.logging import logger
 from core.settings.exceptions.auth import UserAlreadyExists, IncorrectEmailOrPassword, InactiveUser, UserNotFound
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    logger.debug(f"Fetching user by email: {email}")
+    logger.debug(f"Fetching user by emails: {email}")
     result = await db.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
@@ -49,7 +48,7 @@ async def authenticate_user(db: AsyncSession, email: str, password: str) -> User
 
 
 async def register_and_create_user(body, admin, db):
-    logger.info(f"Registering new user with email: {body.email}")
+    logger.info(f"Registering new user with emails: {body.email}")
 
     existing = await get_user_by_email(db, body.email)
     if existing is not None:
@@ -65,13 +64,13 @@ async def register_and_create_user(body, admin, db):
         entity_type="user",
         entity_id=new_user.id,
         details={
-            "email": new_user.email,
+            "emails": new_user.email,
             "role": new_user.role.value,
         },
         can_commit=True
     )
 
-    logger.info(f"User created successfully: id={new_user.id}, email={new_user.email}")
+    logger.info(f"User created successfully: id={new_user.id}, emails={new_user.email}")
 
     return UserRead.model_validate(new_user)
 
@@ -90,7 +89,7 @@ async def create_user(db: AsyncSession, body: UserCreate) -> UserRead:
     await db.commit()
     await db.refresh(user)
 
-    logger.info(f"User persisted in DB: id={user.id}, email={user.email}")
+    logger.info(f"User persisted in DB: id={user.id}, emails={user.email}")
 
     return user
 
@@ -104,7 +103,7 @@ async def update_user(user_id: int, body: UserUpdate, actor_id: int, db: AsyncSe
         raise UserNotFound()
 
     old_data = {
-        "email": user.email,
+        "emails": user.email,
         "role": user.role.value,
         "is_active": user.is_active,
     }
@@ -125,7 +124,7 @@ async def update_user(user_id: int, body: UserUpdate, actor_id: int, db: AsyncSe
         details={
             "before": old_data,
             "after": {
-                "email": body.email,
+                "emails": body.email,
                 "role": body.role.value if body.role else None,
                 "is_active": body.is_active,
             },
@@ -183,7 +182,7 @@ async def login_user(form_data, db):
         action="login",
         entity_type="auth",
         entity_id=user.id,
-        details={"email": user.email},
+        details={"emails": user.email},
         can_commit=True
     )
 
@@ -228,7 +227,7 @@ async def delete_user(
         entity_type="user",
         entity_id=user_id,
         details={
-            "email": user.email,
+            "emails": user.email,
             "role": user.role.value,
         },
         can_commit=True
@@ -239,3 +238,7 @@ async def delete_user(
     logger.info(f"User deleted successfully: id={user_id}")
 
     return {"deleted_id": user_id}
+
+
+async def get_admins(db: AsyncSession) -> list[UserRead]:
+    return await crud.get_all_with_filters(db, User, role=UserRole.ADMIN)
