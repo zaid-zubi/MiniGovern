@@ -7,8 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.deps.auth import require_permission
 from app.models import User
 from app.schemas.language import Language
-from app.services import tags
-from app.services.tags import get_list_tags
+from app.services.catalog import get_table_catalog as read_table_catalog
 from core.db.session import get_db
 from core.rbac import Permission
 from core.settings.constants import ResponseMessages
@@ -16,15 +15,14 @@ from core.settings.response import http_response
 
 router = APIRouter(prefix="/catalog", tags=["Catalogs"])
 
-@router.get("")
+@router.get("/")
 async def get_table_catalog(
+        table_id: int,
         db: Annotated[AsyncSession, Depends(get_db)],
-        _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
-        language: Annotated[Language, Query()] = Language.EN,
-        skip: int = Query(default=0, ge=0),
-        limit: int = Query(default=100, ge=1, le=200),
+        _: Annotated[User, Depends(require_permission(Permission.CATALOG_READ))],
+        language: Annotated[Language, Query()] = Language.EN
 ):
-    data = await get_list_tags(db, skip=skip, limit=limit)
+    data = await read_table_catalog(table_id, db, _)
     return http_response(status=status.HTTP_200_OK,
                          message=ResponseMessages.TAGS.READ.get(language),
                          data=data)

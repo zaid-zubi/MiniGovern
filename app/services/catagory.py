@@ -192,3 +192,6 @@ async def unassign_datasource_with_category(
     )
 
     return ListDataSourceWithCategories.model_validate(datasource)
+
+async def get_categories_list():
+    pass

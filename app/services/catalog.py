@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models import ColumnCatalog, TableCatalog
+from app.models import ColumnCatalog, TableCatalog, Dataset
 from app.services.crud import crud
-from core.db.base import SensitivityLevel
+from core.db.base import SensitivityLevel, UserRole
 from core.logging import logger
+from core.security.masking import mask_value, should_mask
 
 
 async def get_or_create_table_catalog(
@@ -133,3 +135,55 @@ async def upsert_column_catalog(
     )
 
     return column
+
+
+async def get_table_catalog(table_id: int, db: AsyncSession, user):
+    result = await crud.get_one(
+        db,
+        Dataset,
+        selectinload(Dataset.table_catalog)
+        .selectinload(TableCatalog.columns),
+        id=table_id,
+    )
+
+    if not result:
+        return None
+
+    role = user.role
+    is_admin = role == UserRole.ADMIN
+
+    catalog = result.table_catalog
+
+    for column in catalog.columns:
+        sensitivity = column.sensitivity_level
+
+        if should_mask(role, sensitivity):
+
+            if column.profile and "example_values" in column.profile:
+                column.profile = mask_profile_examples(
+                    column_name=column.column_name,
+                    profile=column.profile,
+                    sensitivity=sensitivity,
+                    role=role,
+                )
+
+    return result
+
+
+def mask_profile_examples(
+        column_name: str,
+        profile: dict,
+        sensitivity: SensitivityLevel,
+        role: str | None = None,
+):
+    if not profile or "example_values" not in profile:
+        return profile
+
+    profile = dict(profile)
+
+    profile["example_values"] = [
+        mask_value(v, column_name, sensitivity)
+        for v in profile["example_values"]
+    ]
+
+    return profile

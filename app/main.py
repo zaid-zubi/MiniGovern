@@ -9,6 +9,7 @@ from app.views.scan_job import router as scan_job_router
 from app.views.tags import router as tags_router
 from app.views.categories import router as category_router
 from app.views.datasets import router as dataset_router
+from app.views.catalog import router as catalog_router
 from core.settings.constants import ResponseMessages, Error
 from core.settings.exceptions.datasource import DatasourceConnectionFailed
 from core.settings.response import http_response
@@ -20,6 +21,8 @@ app.include_router(scan_job_router)
 app.include_router(tags_router)
 app.include_router(category_router)
 app.include_router(dataset_router)
+app.include_router(catalog_router)
+
 
 @app.get("/health")
 async def health(db: AsyncSession = Depends(get_db)):
@@ -30,13 +33,15 @@ async def health(db: AsyncSession = Depends(get_db)):
         "database": "connected",
     }
 
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+
 @app.exception_handler(DatasourceConnectionFailed)
 async def datasource_connection_failed_handler(
-    request: Request,
-    exc: DatasourceConnectionFailed,
+        request: Request,
+        exc: DatasourceConnectionFailed,
 ):
     return JSONResponse(
         status_code=400,
