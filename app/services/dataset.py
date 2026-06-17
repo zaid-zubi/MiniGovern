@@ -1,12 +1,20 @@
-from fastapi import HTTPException, status, BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import Dataset
-from app.services.emails.email_notification import notify_admins_dataset_submitted, \
-    notify_owner_dataset_approved, notify_owner_dataset_rejected
-from core.db.base import WorkflowState
-from app.services.audit import log_audit_action
 from app.models.audit import AuditLog
+from app.services.audit import log_audit_action
+from app.services.crud import crud
+from app.services.emails.email_notification import (
+    notify_admins_dataset_submitted,
+    notify_owner_dataset_approved,
+    notify_owner_dataset_rejected,
+)
+from core.db.base import WorkflowState
+from core.logging import logger
+
+
 async def get_dataset(
         db: AsyncSession,
         dataset_id: int,
@@ -32,12 +40,7 @@ async def get_dataset_with_tags(
 ) -> Dataset:
     logger.info(f"Fetching dataset with tags: id={dataset_id}")
 
-    dataset = await crud.get_one(
-        db,
-        Dataset,
-        selectinload(Dataset.tags),
-        id=dataset_id
-    )
+    dataset = await crud.get_one(db, Dataset, selectinload(Dataset.tags), id=dataset_id)
 
     if not dataset:
         logger.warning(f"Dataset not found (with tags): id={dataset_id}")
@@ -48,14 +51,6 @@ async def get_dataset_with_tags(
 
     logger.info(f"Dataset with tags loaded: id={dataset_id}, tags={len(dataset.tags)}")
     return dataset
-
-
-from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models import Dataset
-from app.services.crud import crud
-from core.logging import logger
 
 
 async def get_datasets(
@@ -114,16 +109,10 @@ async def get_or_create_dataset(
     Get or Create dataset through Scan Job process
     """
     logger.info(
-        f"Get or create dataset: table_catalog_id={table_catalog_id}, "
-        f"table_name={table_name}"
+        f"Get or create dataset: table_catalog_id={table_catalog_id}, table_name={table_name}"
     )
 
-    existing = await crud.get_one(
-        db,
-        Dataset,
-        table_catalog_id=table_catalog_id,
-        owner_id=owner_id
-    )
+    existing = await crud.get_one(db, Dataset, table_catalog_id=table_catalog_id, owner_id=owner_id)
     if existing:
         logger.info(
             f"Dataset already exists: id={existing.id}, table_catalog_id={table_catalog_id}"
@@ -192,9 +181,7 @@ async def reject_dataset(
         background_tasks: BackgroundTasks,
         reason: str | None = None,
 ) -> Dataset:
-    logger.info(
-        f"Rejecting dataset: id={dataset_id}, reason={reason}"
-    )
+    logger.info(f"Rejecting dataset: id={dataset_id}, reason={reason}")
 
     dataset = await get_dataset(db, dataset_id)
 
@@ -221,7 +208,7 @@ async def reject_dataset(
             "workflow_state": dataset.workflow_state.value,
         },
     )
-    result = await crud.commit(db, dataset)
+    await crud.commit(db, dataset)
 
     background_tasks.add_task(
         notify_owner_dataset_rejected,
@@ -270,7 +257,6 @@ async def submit_dataset(
 
     await crud.commit(db, dataset)
 
-
     background_tasks.add_task(
         notify_admins_dataset_submitted,
         db,
@@ -280,6 +266,7 @@ async def submit_dataset(
     logger.info(f"Dataset submitted: id={dataset_id}")
 
     return dataset
+
 
 async def get_dataset_audit_logs(
         db: AsyncSession,

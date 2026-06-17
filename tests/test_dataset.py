@@ -8,7 +8,7 @@ async def get_list_datasets(async_client: AsyncClient, token: str):
         "/dataset/",
         headers={"Authorization": f"Bearer {token}"},
     )
-    return response.json()['data']
+    return response.json()["data"]
 
 
 async def create_dataset(async_client: AsyncClient, token: str):
@@ -25,19 +25,13 @@ async def create_dataset(async_client: AsyncClient, token: str):
 
 async def get_draft_datasets(async_client: AsyncClient, token: str):
     datasets = await get_list_datasets(async_client, token)
-    draft_datasets = [
-        d for d in datasets
-        if d.get("workflow_state") == "draft"
-    ]
+    draft_datasets = [d for d in datasets if d.get("workflow_state") == "draft"]
     return draft_datasets
 
 
 async def get_submitted_datasets(async_client: AsyncClient, token: str):
     datasets = await get_list_datasets(async_client, token)
-    submitted_datasets = [
-        d for d in datasets
-        if d.get("workflow_state") == "submitted"
-    ]
+    submitted_datasets = [d for d in datasets if d.get("workflow_state") == "submitted"]
     return submitted_datasets
 
 

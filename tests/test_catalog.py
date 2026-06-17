@@ -1,6 +1,11 @@
 import pytest
 
-from tests.conftest import AsyncClient, login_for_testing, generate_random_email, generate_random_password
+from tests.conftest import (
+    AsyncClient,
+    generate_random_email,
+    generate_random_password,
+    login_for_testing,
+)
 
 
 async def create_datasource(client: AsyncClient, token: str):
@@ -20,7 +25,6 @@ async def create_datasource(client: AsyncClient, token: str):
 
     assert res.status_code in (200, 201), res.text
     return res.json()["data"]["id"]
-
 
 
 @pytest.mark.anyio

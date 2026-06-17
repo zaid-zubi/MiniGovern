@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, String, Text, JSON, DateTime, Enum
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.db.base import Base, TimestampMixin, JobStatus
+from core.db.base import Base, JobStatus, TimestampMixin
 
 
 class ScanJob(Base, TimestampMixin):

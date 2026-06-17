@@ -1,5 +1,6 @@
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
 from core.logging import logger
 
 
@@ -38,8 +39,8 @@ async def get_tables(engine: AsyncEngine) -> list[str]:
 
 
 async def get_columns(
-        engine: AsyncEngine,
-        table_name: str,
+    engine: AsyncEngine,
+    table_name: str,
 ) -> list[dict]:
     logger.info(f"Fetching columns for table: {table_name}")
 
@@ -61,13 +62,11 @@ async def get_columns(
 
 
 async def get_sample_rows(
-        engine: AsyncEngine,
-        table_name: str,
-        limit: int = 100,
+    engine: AsyncEngine,
+    table_name: str,
+    limit: int = 100,
 ) -> list[dict]:
-    logger.info(
-        f"Fetching sample rows: table={table_name}, limit={limit}"
-    )
+    logger.info(f"Fetching sample rows: table={table_name}, limit={limit}")
 
     query = text(f"""
         SELECT *
@@ -79,8 +78,6 @@ async def get_sample_rows(
         result = await conn.execute(query, {"limit": limit})
         rows = result.mappings().all()
 
-    logger.info(
-        f"Sample rows fetched: table={table_name}, count={len(rows)}"
-    )
+    logger.info(f"Sample rows fetched: table={table_name}, count={len(rows)}")
 
     return rows

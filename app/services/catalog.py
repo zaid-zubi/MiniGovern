@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import ColumnCatalog, TableCatalog, Dataset
+from app.models import ColumnCatalog, Dataset, TableCatalog
 from app.services.crud import crud
 from core.db.base import SensitivityLevel, UserRole
 from core.logging import logger
@@ -29,13 +29,11 @@ async def get_or_create_table_catalog(
         TableCatalog,
         datasource_id=datasource_id,
         scan_job_id=scan_job_id,
-        table_name=table_name
+        table_name=table_name,
     )
 
     if existing:
-        logger.info(
-            f"Table catalog exists: id={existing.id}, table={table_name}"
-        )
+        logger.info(f"Table catalog exists: id={existing.id}, table={table_name}")
 
         if row_count is not None:
             logger.info(
@@ -45,9 +43,7 @@ async def get_or_create_table_catalog(
 
         return existing
 
-    logger.info(
-        f"Creating table catalog: datasource_id={datasource_id}, table={table_name}"
-    )
+    logger.info(f"Creating table catalog: datasource_id={datasource_id}, table={table_name}")
 
     table_catalog = TableCatalog(
         datasource_id=datasource_id,
@@ -59,32 +55,28 @@ async def get_or_create_table_catalog(
     db.add(table_catalog)
     await db.flush()
 
-    logger.info(
-        f"Table catalog created: id={table_catalog.id}, table={table_name}"
-    )
+    logger.info(f"Table catalog created: id={table_catalog.id}, table={table_name}")
 
     return table_catalog
 
 
 async def upsert_column_catalog(
-    db: AsyncSession,
-    table_id: int,
-    column_name: str,
-    declared_type: str,
-    profile: dict,
-    sensitivity_level: SensitivityLevel = SensitivityLevel.NONE,
-    sensitivity_reason: str | None = None,
-    semantic_type: str | None = None,
-    valid_ratio: float | None = None,
-    enrichment_source: str | None = None,
+        db: AsyncSession,
+        table_id: int,
+        column_name: str,
+        declared_type: str,
+        profile: dict,
+        sensitivity_level: SensitivityLevel = SensitivityLevel.NONE,
+        sensitivity_reason: str | None = None,
+        semantic_type: str | None = None,
+        valid_ratio: float | None = None,
+        enrichment_source: str | None = None,
 ) -> ColumnCatalog:
     """
     Create or update a column catalog entry during scan.
     """
 
-    logger.info(
-        f"Fetching column catalog: table_id={table_id}, column={column_name}"
-    )
+    logger.info(f"Fetching column catalog: table_id={table_id}, column={column_name}")
 
     existing = await crud.get_one(
         db,
@@ -94,9 +86,7 @@ async def upsert_column_catalog(
     )
 
     if existing:
-        logger.info(
-            f"Updating column catalog: id={existing.id}, column={column_name}"
-        )
+        logger.info(f"Updating column catalog: id={existing.id}, column={column_name}")
 
         existing.declared_type = declared_type
         existing.profile = profile
@@ -123,9 +113,7 @@ async def upsert_column_catalog(
 
         return existing
 
-    logger.info(
-        f"Creating column catalog: table_id={table_id}, column={column_name}"
-    )
+    logger.info(f"Creating column catalog: table_id={table_id}, column={column_name}")
 
     column = ColumnCatalog(
         table_id=table_id,
@@ -142,18 +130,16 @@ async def upsert_column_catalog(
     db.add(column)
     await db.flush()
 
-    logger.info(
-        f"Column catalog created: id={column.id}, column={column_name}"
-    )
+    logger.info(f"Column catalog created: id={column.id}, column={column_name}")
 
     return column
+
 
 async def get_table_catalog(table_id: int, db: AsyncSession, user):
     result = await crud.get_one(
         db,
         Dataset,
-        selectinload(Dataset.table_catalog)
-        .selectinload(TableCatalog.columns),
+        selectinload(Dataset.table_catalog).selectinload(TableCatalog.columns),
         id=table_id,
     )
 
@@ -161,7 +147,7 @@ async def get_table_catalog(table_id: int, db: AsyncSession, user):
         raise DatasetNotFound
 
     role = user.role
-    is_admin = role == UserRole.ADMIN
+    role == UserRole.ADMIN
 
     catalog = result.table_catalog
 
@@ -169,7 +155,6 @@ async def get_table_catalog(table_id: int, db: AsyncSession, user):
         sensitivity = column.sensitivity_level
 
         if should_mask(role, sensitivity):
-
             if column.profile and "example_values" in column.profile:
                 column.profile = mask_profile_examples(
                     column_name=column.column_name,
@@ -193,8 +178,7 @@ def mask_profile_examples(
     profile = dict(profile)
 
     profile["example_values"] = [
-        mask_value(v, column_name, sensitivity)
-        for v in profile["example_values"]
+        mask_value(v, column_name, sensitivity) for v in profile["example_values"]
     ]
 
     return profile

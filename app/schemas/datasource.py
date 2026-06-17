@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -35,11 +34,14 @@ class DataSourceRead(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class CategoryRead(BaseModel):
     id: int
     name: str
     description: str | None
 
     model_config = {"from_attributes": True}
+
+
 class ListDataSourceWithCategories(DataSourceRead):
     categories: list[CategoryRead]

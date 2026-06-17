@@ -14,7 +14,7 @@ async def log_audit_action(
     entity_id: int,
     dataset_id: int | None = None,
     details: dict | None = None,
-    can_commit: bool = False
+    can_commit: bool = False,
 ) -> AuditLog:
     """
     Create an audit log entry.
@@ -39,8 +39,6 @@ async def log_audit_action(
     else:
         db.add(audit)
 
-    logger.info(
-        f"AUDIT created in memory: action={action}, entity={entity_type}, id={entity_id}"
-    )
+    logger.info(f"AUDIT created in memory: action={action}, entity={entity_type}, id={entity_id}")
 
     return audit

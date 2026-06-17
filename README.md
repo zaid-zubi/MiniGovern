@@ -1,102 +1,209 @@
+# MiniGovern — README
 
-# MiniGovern — Setup & Run Guide
+## A. Setup Steps
 
-MiniGovern is a lightweight data governance service.
+### 1. Install dependencies
 
-It scans databases, profiles data, detects PII, and supports dataset approval workflows.
+```bash
+poerty install | make install
+```
 
 ---
 
-# 🚀 1. Setup Project
+### 2. Configure `.env`
+
+Copy example file and configure environment variables:
 
 ```bash
-git clone <repo>
-cd minigovern
 cp .env.example .env
-````
-
----
-
-# ⚙️ 2. Configure Environment
-
-Generate encryption key:
-
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-Add to `.env`:
-
-```env
-ENCRYPTION_KEY=your_key
+Update required values:
+ 
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/minigovern
+MYSQL_URL=mysql://user:password@localhost:3306/minigovern
+SECRET_KEY=your_secret_key
 ```
 
 ---
 
-# 📦 3. Install & DB Setup
+### 3. Run Postgres migrations
 
 ```bash
-make install
-make db-up
-make migrate
-make defaultAdmin
+alembic upgrade head
 ```
 
 ---
 
-# ▶️ 4. Run Application
-
-Start API:
+### 4. Load MySQL seed script
 
 ```bash
-make run
-```
-
-Open Swagger:
-
-```
-http://localhost:8000/docs
+mysql -u root -p minigovern < seeds/mysql_seed.sql
 ```
 
 ---
 
-# 📧 5. Email System (IMPORTANT)
-
-Run SMTP server in a **second terminal**:
+### 5. Start API
 
 ```bash
-make smtp
+uvicorn app.main:app --reload
 ```
-
-OR:
-
-```bash
-python -m aiosmtpd -n -l localhost:1025
-```
-
-Emails will appear in this terminal.
 
 ---
 
-# 🔄 6. Full Workflow Test
+### 6. Start background worker
 
-1. Create data source
-2. Trigger scan
-3. Poll job status
-4. View catalog
-5. Submit dataset
-6. Approve / reject dataset
-7. Check email output
+```bash
+python worker.py
+```
 
 ---
 
-# 🧪 7. Dev Commands
+## B. Tech Versions
+
+* Python: 3.11+
+* PostgreSQL: 14+
+* MySQL: 8+
+
+---
+
+## C. How to Run Tests
+
+Run all tests with:
 
 ```bash
-make test
-make lint
-make format
-make db-down
+pytest
 ```
+
+---
+
+## D. Admin User Setup
+
+### Option 1: Seeder (recommended)
+
+```bash
+python scripts/seed_admin.py
+```
+
+### Option 2: API (if enabled)
+
+Send request to register admin user and assign role manually in DB.
+
+Default admin credentials (if seeded):
+
+```
+email: admin@minigovern.com
+password: Admin123!
+```
+
+---
+
+## E. Example Flow (Full System)
+
+### 1. Register user
+
+```bash
+curl -X POST http://localhost:8000/auth/register \
+-H "Content-Type: application/json" \
+-d '{"email":"user@test.com","password":"Test123!"}'
+```
+
+---
+
+### 2. Create data source
+
+```bash
+curl -X POST http://localhost:8000/datasources \
+-H "Authorization: Bearer <token>" \
+-d '{"name":"My DB","type":"mysql"}'
+```
+
+---
+
+### 3. Run scan
+
+```bash
+curl -X POST http://localhost:8000/scans \
+-H "Authorization: Bearer <token>" \
+-d '{"datasource_id":1}'
+```
+
+---
+
+### 4. Poll scan status
+
+```bash
+curl http://localhost:8000/scans/1/status \
+-H "Authorization: Bearer <token>"
+```
+
+---
+
+### 5. View catalog with PII tags
+
+```bash
+curl http://localhost:8000/catalog/1 \
+-H "Authorization: Bearer <token>"
+```
+
+---
+
+### 6. Submit dataset
+
+```bash
+curl -X POST http://localhost:8000/datasets/1/submit \
+-H "Authorization: Bearer <token>"
+```
+
+---
+
+### 7. Approve dataset
+
+```bash
+curl -X POST http://localhost:8000/datasets/1/approve \
+-H "Authorization: Bearer <token>"
+```
+
+---
+
+### 8. Email notification
+
+Triggered automatically after approval (via worker).
+
+---
+
+## F. Design Notes
+
+### Key Decisions
+
+* Separated API and background worker for scalability
+* Used Postgres for metadata and MySQL for source simulation
+* Async processing for scan jobs
+
+---
+
+### Trade-offs
+
+* Simplified permissions model for faster delivery
+* Basic worker instead of full queue system (e.g., Celery)
+* Limited frontend (API-first approach)
+
+---
+
+### What was NOT implemented
+
+* Advanced RBAC system
+* Distributed task queue (Redis/Celery)
+* Full frontend dashboard
+
+---
+
+### What I would improve
+
+* Replace custom worker with queue-based system
+* Add caching layer for scan results
+* Improve observability (logs + metrics)
+* Add full frontend UI
 
 ---

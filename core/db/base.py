@@ -11,6 +11,7 @@ class Base(DeclarativeBase):
 
 class SourceBase(DeclarativeBase):
     """MySQL source mappings only — not migrated by Alembic."""
+
     pass
 
 

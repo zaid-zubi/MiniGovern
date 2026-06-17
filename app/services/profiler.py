@@ -1,13 +1,11 @@
-from typing import Any
 from numbers import Number
+from typing import Any
 
 from core.logging import logger
 
 
 def profile_column(rows: list[dict], column_name: str) -> dict:
-    logger.info(
-        f"Profiling column: {column_name}, rows={len(rows)}"
-    )
+    logger.info(f"Profiling column: {column_name}, rows={len(rows)}")
 
     values = [row.get(column_name) for row in rows]
     non_null_values = [v for v in values if v is not None]
@@ -28,33 +26,32 @@ def profile_column(rows: list[dict], column_name: str) -> dict:
     }
 
     if not non_null_values:
-        logger.info(
-            f"Column profile completed: {column_name} (all values null)"
-        )
+        logger.info(f"Column profile completed: {column_name} (all values null)")
         return result
 
     sample_value = non_null_values[0]
 
     if isinstance(sample_value, Number):
-        numeric_values = [
-            v for v in non_null_values
-            if isinstance(v, Number)
-        ]
+        numeric_values = [v for v in non_null_values if isinstance(v, Number)]
 
-        result.update({
-            "min": min(numeric_values),
-            "max": max(numeric_values),
-            "mean": round(sum(numeric_values) / len(numeric_values), 4),
-        })
+        result.update(
+            {
+                "min": min(numeric_values),
+                "max": max(numeric_values),
+                "mean": round(sum(numeric_values) / len(numeric_values), 4),
+            }
+        )
 
     elif isinstance(sample_value, str):
         lengths = [len(v) for v in non_null_values if isinstance(v, str)]
 
-        result.update({
-            "min_length": min(lengths),
-            "max_length": max(lengths),
-            "example_values": list(dict.fromkeys(non_null_values))[:5],
-        })
+        result.update(
+            {
+                "min_length": min(lengths),
+                "max_length": max(lengths),
+                "example_values": list(dict.fromkeys(non_null_values))[:5],
+            }
+        )
 
     logger.info(
         f"Column profile completed: {column_name} | "

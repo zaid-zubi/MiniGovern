@@ -3,8 +3,8 @@ from httpx import AsyncClient
 
 from core.db.base import UserRole
 from tests.conftest import (
-    get_admin_token,
     generate_random_email,
+    get_admin_token,
 )
 
 

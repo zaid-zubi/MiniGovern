@@ -3,16 +3,15 @@ from sqlalchemy.orm import selectinload
 
 from app.models.dataset import Dataset
 from app.models.tag import Tag
+from app.services.audit import log_audit_action
 from app.services.crud import crud
 from app.services.dataset import get_dataset_with_tags
-from app.services.audit import log_audit_action
 from core.logging import logger
-
 from core.settings.exceptions.tag import (
-    TagNotFound,
-    TagAlreadyExists,
     TagAlreadyAssigned,
+    TagAlreadyExists,
     TagNotAssigned,
+    TagNotFound,
 )
 
 
@@ -51,10 +50,10 @@ async def get_tag_by_id(db: AsyncSession, id: int, *options):
 
 
 async def create_tag(
-        db: AsyncSession,
-        name: str,
-        user_id: int,
-        is_system: bool = False,
+    db: AsyncSession,
+    name: str,
+    user_id: int,
+    is_system: bool = False,
 ):
     logger.info(f"Creating tag: name={name}, user_id={user_id}")
 
@@ -86,21 +85,17 @@ async def create_tag(
 
 
 async def assign_tag_to_dataset(
-        db: AsyncSession,
-        dataset_id: int,
-        tag_name: str,
-        actor_id: int,
+    db: AsyncSession,
+    dataset_id: int,
+    tag_name: str,
+    actor_id: int,
 ) -> Dataset:
-    logger.info(
-        f"Assigning tag: dataset_id={dataset_id}, tag={tag_name}, actor_id={actor_id}"
-    )
+    logger.info(f"Assigning tag: dataset_id={dataset_id}, tag={tag_name}, actor_id={actor_id}")
 
     dataset, tag = await check_dataset_with_tag(dataset_id, tag_name, db)
 
     if tag in dataset.tags:
-        logger.warning(
-            f"Tag already assigned: dataset_id={dataset_id}, tag={tag_name}"
-        )
+        logger.warning(f"Tag already assigned: dataset_id={dataset_id}, tag={tag_name}")
         raise TagAlreadyAssigned(f"Tag '{tag_name}' already assigned")
 
     dataset.tags.append(tag)
@@ -120,29 +115,23 @@ async def assign_tag_to_dataset(
 
     await crud.commit(db, dataset)
 
-    logger.info(
-        f"Tag assigned successfully: dataset_id={dataset_id}, tag={tag_name}"
-    )
+    logger.info(f"Tag assigned successfully: dataset_id={dataset_id}, tag={tag_name}")
 
     return dataset
 
 
 async def remove_tag_from_dataset(
-        db: AsyncSession,
-        dataset_id: int,
-        tag_name: str,
-        actor_id: int,
+    db: AsyncSession,
+    dataset_id: int,
+    tag_name: str,
+    actor_id: int,
 ):
-    logger.info(
-        f"Removing tag: dataset_id={dataset_id}, tag={tag_name}, actor_id={actor_id}"
-    )
+    logger.info(f"Removing tag: dataset_id={dataset_id}, tag={tag_name}, actor_id={actor_id}")
 
     dataset, tag = await check_dataset_with_tag(dataset_id, tag_name, db)
 
     if tag not in dataset.tags:
-        logger.warning(
-            f"Tag not assigned: dataset_id={dataset_id}, tag={tag_name}"
-        )
+        logger.warning(f"Tag not assigned: dataset_id={dataset_id}, tag={tag_name}")
         raise TagNotAssigned(f"Tag '{tag_name}' is not assigned")
 
     dataset.tags.remove(tag)
@@ -162,9 +151,7 @@ async def remove_tag_from_dataset(
 
     await crud.commit(db, dataset)
 
-    logger.info(
-        f"Tag removed successfully: dataset_id={dataset_id}, tag={tag_name}"
-    )
+    logger.info(f"Tag removed successfully: dataset_id={dataset_id}, tag={tag_name}")
 
     return dataset
 
@@ -179,9 +166,9 @@ async def check_dataset_with_tag(dataset_id: int, tag_name: str, db: AsyncSessio
 
 
 async def delete_tag(
-        tag_id: int,
-        db: AsyncSession,
-        actor_id: int,
+    tag_id: int,
+    db: AsyncSession,
+    actor_id: int,
 ):
     logger.info(f"Deleting tag: id={tag_id}, actor_id={actor_id}")
 
@@ -210,8 +197,6 @@ async def get_tag_with_datasets(tag_id: int, db: AsyncSession):
 
     tag = await get_tag_by_id(db, tag_id, selectinload(Tag.datasets))
 
-    logger.info(
-        f"Tag loaded: id={tag_id}, datasets={len(tag.datasets)}"
-    )
+    logger.info(f"Tag loaded: id={tag_id}, datasets={len(tag.datasets)}")
 
     return tag

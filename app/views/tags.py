@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter
-from fastapi import Depends, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.auth import require_permission
@@ -19,88 +18,95 @@ router = APIRouter(prefix="/tags", tags=["Tags"])
 
 @router.get("")
 async def read_tags(
-        db: Annotated[AsyncSession, Depends(get_db)],
-        _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
-        language: Annotated[Language, Query()] = Language.EN,
-        skip: int = Query(default=0, ge=0),
-        limit: int = Query(default=100, ge=1, le=200),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
+    language: Annotated[Language, Query()] = Language.EN,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=200),
 ):
     data = await get_list_tags(db, skip=skip, limit=limit)
-    return http_response(status=status.HTTP_200_OK,
-                         message=ResponseMessages.TAGS.READ.get(language),
-                         data=data)
+    return http_response(
+        status=status.HTTP_200_OK, message=ResponseMessages.TAGS.READ.get(language), data=data
+    )
 
 
 @router.get("/{tag_id}")
-async def get_tag(tag_id: int,
-                  db: Annotated[AsyncSession, Depends(get_db)],
-                  _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
-                  language: Annotated[Language, Query()] = Language.EN):
+async def get_tag(
+    tag_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_permission(Permission.TAG_READ))],
+    language: Annotated[Language, Query()] = Language.EN,
+):
     data = await get_tag_by_id(db, tag_id)
-    return http_response(status=status.HTTP_200_OK,
-                         message=ResponseMessages.GENERAL.READ.get(language),
-                         data=data)
+    return http_response(
+        status=status.HTTP_200_OK, message=ResponseMessages.GENERAL.READ.get(language), data=data
+    )
 
 
 @router.post("/")
-async def create_tag(name: str,
-                     language: Annotated[Language, Query()] = Language.EN,
-                     db: AsyncSession = Depends(get_db),
-                     current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...
-                     ):
+async def create_tag(
+    name: str,
+    language: Annotated[Language, Query()] = Language.EN,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...,
+):
     data = await tags.create_tag(db, name, current_user.id)
-    return http_response(status=status.HTTP_201_CREATED,
-                         message=ResponseMessages.TAGS.CREATED.get(language),
-                         data=data)
+    return http_response(
+        status=status.HTTP_201_CREATED,
+        message=ResponseMessages.TAGS.CREATED.get(language),
+        data=data,
+    )
 
 
 @router.get("/datasets/{tag_id}")
-async def get_tag_with_datasets(tag_id: int,
-                                language: Annotated[Language, Query()] = Language.EN,
-                                db: AsyncSession = Depends(get_db),
-                                current_user: Annotated[
-                                    User, Depends(require_permission(Permission.TAG_CREATE))] = ...):
+async def get_tag_with_datasets(
+    tag_id: int,
+    language: Annotated[Language, Query()] = Language.EN,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(require_permission(Permission.TAG_CREATE))] = ...,
+):
     data = await tags.get_tag_with_datasets(tag_id, db)
-    return http_response(status=status.HTTP_200_OK,
-                         message=ResponseMessages.GENERAL.READ.get(language),
-                         data=data)
+    return http_response(
+        status=status.HTTP_200_OK, message=ResponseMessages.GENERAL.READ.get(language), data=data
+    )
 
 
 @router.post("/datasets/{dataset_id}/assign")
 async def assign_tag(
-        dataset_id: int,
-        tag_name: str,
-        language: Annotated[Language, Query()] = Language.EN,
-        db: AsyncSession = Depends(get_db),
-        current_user: Annotated[User, Depends(require_permission(Permission.TAG_ASSIGN))] = ...
+    dataset_id: int,
+    tag_name: str,
+    language: Annotated[Language, Query()] = Language.EN,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(require_permission(Permission.TAG_ASSIGN))] = ...,
 ):
     data = await tags.assign_tag_to_dataset(db, dataset_id, tag_name, current_user.id)
     return http_response(
-        status=status.HTTP_200_OK,
-        message=ResponseMessages.TAGS.ASSIGN.get(language),
-        data=data
+        status=status.HTTP_200_OK, message=ResponseMessages.TAGS.ASSIGN.get(language), data=data
     )
 
 
 @router.delete("/datasets/{dataset_id}/unassign")
 async def unassign_tag(
-        dataset_id: int,
-        tag_name: str,
-        language: Annotated[Language, Query()] = Language.EN,
-        db: AsyncSession = Depends(get_db),
-        current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...
+    dataset_id: int,
+    tag_name: str,
+    language: Annotated[Language, Query()] = Language.EN,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...,
 ):
     data = await tags.remove_tag_from_dataset(db, dataset_id, tag_name, current_user.id)
-    return http_response(status=status.HTTP_200_OK,
-                         message=ResponseMessages.TAGS.DELETED.get(language),
-                         data=data)
+    return http_response(
+        status=status.HTTP_200_OK, message=ResponseMessages.TAGS.DELETED.get(language), data=data
+    )
 
 
 @router.delete("/")
-async def delete_tag(tag_id: int,
-                     language: Annotated[Language, Query()] = Language.EN,
-                     db: AsyncSession = Depends(get_db),
-                     current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...):
-    data = await tags.delete_tag(tag_id, db, current_user.id)
-    return http_response(status=status.HTTP_200_OK,
-                         message=ResponseMessages.TAGS.DELETED.get(language))
+async def delete_tag(
+    tag_id: int,
+    language: Annotated[Language, Query()] = Language.EN,
+    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(require_permission(Permission.TAG_DELETE))] = ...,
+):
+    await tags.delete_tag(tag_id, db, current_user.id)
+    return http_response(
+        status=status.HTTP_200_OK, message=ResponseMessages.TAGS.DELETED.get(language)
+    )

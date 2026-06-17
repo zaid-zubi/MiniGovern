@@ -7,12 +7,11 @@ from app.services.audit import log_audit_action
 from app.services.crud import crud
 from app.services.datasource import get_datasource_with_categories
 from core.logging import logger
-
 from core.settings.exceptions.dataset import (
-    CategoryNotFound,
-    CategoryAlreadyExists,
     CategoryAlreadyAssigned,
+    CategoryAlreadyExists,
     CategoryNotAssigned,
+    CategoryNotFound,
 )
 
 
@@ -38,7 +37,7 @@ async def create_category(category: CategoryIn, db: AsyncSession, actor_id: int)
         entity_type="category",
         entity_id=result.id,
         details={"name": result.name},
-        can_commit=True
+        can_commit=True,
     )
 
     return result

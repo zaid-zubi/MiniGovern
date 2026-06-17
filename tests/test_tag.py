@@ -98,7 +98,7 @@ async def test_delete_tag(async_client: AsyncClient):
 async def test_assign_tag_to_dataset(async_client: AsyncClient):
     token = await get_admin_token(async_client)
 
-    tag = await async_client.post(
+    await async_client.post(
         "/tags/",
         params={"name": "assign-tag"},
         headers={"Authorization": f"Bearer {token}"},

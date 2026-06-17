@@ -1,7 +1,6 @@
 import re
 
-from core.db.base import UserRole, SensitivityLevel
-
+from core.db.base import SensitivityLevel, UserRole
 
 EMAIL_RE = re.compile(r"(^[^@]{1})[^@]*(@.*$)")
 
@@ -23,6 +22,7 @@ def should_mask(role: str, sensitivity: SensitivityLevel | None) -> bool:
 # -------------------------
 # Masking strategies
 # -------------------------
+
 
 def mask_email(value: str) -> str:
     if not value or "@" not in value:
@@ -65,6 +65,7 @@ def mask_generic(value: str) -> str:
 # -------------------------
 # Dispatcher
 # -------------------------
+
 
 def mask_value(value: str, column_name: str, sensitivity: SensitivityLevel | None) -> str:
     """

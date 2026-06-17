@@ -1,7 +1,7 @@
-from sqlalchemy import ForeignKey, Integer, String, Text, JSON, Float, Enum
+from sqlalchemy import JSON, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.db.base import Base, TimestampMixin, SensitivityLevel
+from core.db.base import Base, SensitivityLevel, TimestampMixin
 
 
 class TableCatalog(Base, TimestampMixin):
@@ -16,7 +16,7 @@ class TableCatalog(Base, TimestampMixin):
     datasource: Mapped["DataSource"] = relationship(back_populates="tables")
     scan_job: Mapped["ScanJob"] = relationship(back_populates="tables")
     columns: Mapped[list["ColumnCatalog"]] = relationship(back_populates="table")
-    dataset: Mapped["Dataset | None"] = relationship(back_populates="table_catalog", uselist=False)
+    dataset: Mapped["Dataset" | None] = relationship(back_populates="table_catalog", uselist=False)
 
 
 class ColumnCatalog(Base, TimestampMixin):

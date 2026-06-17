@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 from core.db.base import WorkflowState
 
@@ -27,6 +28,7 @@ class TableCatalogRead(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class DatasetRead(BaseModel):
     id: int

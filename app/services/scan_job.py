@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.scan_job import ScanJob
@@ -7,10 +8,9 @@ from app.services.crud import crud
 from app.services.datasource import get_datasource
 from core.db.base import JobStatus
 from core.logging import logger
-
 from core.settings.exceptions.scan_job import (
-    ScanJobNotFound,
     DatasourceNotFound,
+    ScanJobNotFound,
 )
 
 
@@ -19,9 +19,7 @@ async def create_scan_job(
         db: AsyncSession,
         owner_id: int,
 ):
-    logger.info(
-        f"Creating scan job: datasource_id={datasource_id}, owner_id={owner_id}"
-    )
+    logger.info(f"Creating scan job: datasource_id={datasource_id}, owner_id={owner_id}")
 
     datasource = await get_datasource(db, datasource_id)
 
@@ -53,7 +51,7 @@ async def create_scan_job(
             "datasource_id": datasource_id,
             "status": JobStatus.PENDING.value,
         },
-        can_commit=True
+        can_commit=True,
     )
 
     return scan_job
@@ -81,9 +79,7 @@ async def start_scan_job(scan_job: ScanJob, db: AsyncSession):
 
     await db.commit()
 
-    logger.info(
-        f"Scan job started: id={scan_job.id}, started_at={scan_job.started_at.isoformat()}"
-    )
+    logger.info(f"Scan job started: id={scan_job.id}, started_at={scan_job.started_at.isoformat()}")
 
 
 async def complete_scan_job(
@@ -152,20 +148,13 @@ async def fail_scan_job(
     return scan_job
 
 
-async def get_scan_job_status(
-        db: AsyncSession,
-        scan_job_id: int
-):
+async def get_scan_job_status(db: AsyncSession, scan_job_id: int):
     job = await crud.get_one(db, ScanJob, id=scan_job_id)
 
     if not job:
         raise ScanJobNotFound()
 
-    return {
-        "scan_job_id": job.id,
-        "status": job.status,
-        "message": _get_status_message(job.status)
-    }
+    return {"scan_job_id": job.id, "status": job.status, "message": _get_status_message(job.status)}
 
 
 def _get_status_message(status_value: JobStatus) -> str | None:

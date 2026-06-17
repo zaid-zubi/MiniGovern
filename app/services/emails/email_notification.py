@@ -1,19 +1,19 @@
-from app.services.emails.email import send_email
-from app.services.emails.email_templates import (
-    dataset_submitted_template,
-    dataset_approved_template,
-    dataset_rejected_template,
-)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.dataset import Dataset
 from app.services.auth import get_admins, get_user_by_id
+from app.services.emails.email import send_email
+from app.services.emails.email_templates import (
+    dataset_approved_template,
+    dataset_rejected_template,
+    dataset_submitted_template,
+)
 from core.logging import logger
 
 
 async def notify_admins_dataset_submitted(
-        db: AsyncSession,
-        dataset: Dataset,
+    db: AsyncSession,
+    dataset: Dataset,
 ) -> None:
     admins = await get_admins(db)
 
@@ -33,8 +33,8 @@ async def notify_admins_dataset_submitted(
 
 
 async def notify_owner_dataset_approved(
-        db: AsyncSession,
-        dataset: Dataset,
+    db: AsyncSession,
+    dataset: Dataset,
 ) -> None:
     owner = await get_user_by_id(db, dataset.owner_id)
 
@@ -52,9 +52,9 @@ async def notify_owner_dataset_approved(
 
 
 async def notify_owner_dataset_rejected(
-        db: AsyncSession,
-        dataset: Dataset,
-        comment: str | None = None,
+    db: AsyncSession,
+    dataset: Dataset,
+    comment: str | None = None,
 ) -> None:
     owner = await get_user_by_id(db, dataset.owner_id)
 

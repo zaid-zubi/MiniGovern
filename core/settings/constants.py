@@ -32,10 +32,12 @@ class ResponseMessages:
     class DATASET:
         READ = {"en": "Dataset retrieved successfully", "ar": "تم جلب مجموعة البيانات بنجاح"}
         READ_LIST = {"en": "Datasets retrieved successfully", "ar": "تم جلب مجموعات البيانات بنجاح"}
-        APPROVE = {"en": "Dataset approved successfully", "ar": "تمت الموافقة على مجموعة البيانات بنجاح"}
+        APPROVE = {
+            "en": "Dataset approved successfully",
+            "ar": "تمت الموافقة على مجموعة البيانات بنجاح",
+        }
         SUBMIT = {"en": "Dataset submitted successfully", "ar": "تم إرسال مجموعة البيانات بنجاح"}
         REJECT = {"en": "Dataset rejected successfully", "ar": "تم رفض مجموعة البيانات بنجاح"}
-
 
 
 class Error:

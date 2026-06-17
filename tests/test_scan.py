@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 
 from tests.conftest import AsyncClient, get_admin_token
@@ -22,7 +20,6 @@ async def create_datasource(async_client: AsyncClient, token: str):
 
     assert res.status_code in (200, 201), res.text
     return res.json()["data"]["id"]
-
 
 
 @pytest.mark.anyio

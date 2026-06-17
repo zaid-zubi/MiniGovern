@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, Text, Enum
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.db.base import Base, TimestampMixin, WorkflowState
@@ -18,7 +18,5 @@ class Dataset(Base, TimestampMixin):
 
     table_catalog: Mapped["TableCatalog"] = relationship(back_populates="dataset")
     owner: Mapped["User"] = relationship(back_populates="datasets")
-    tags: Mapped[list["Tag"]] = relationship(
-        secondary="dataset_tags", back_populates="datasets"
-    )
+    tags: Mapped[list["Tag"]] = relationship(secondary="dataset_tags", back_populates="datasets")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="dataset")

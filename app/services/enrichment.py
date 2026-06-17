@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 import httpx
@@ -13,11 +14,7 @@ async def detect_country(values: list[Any]) -> dict:
     Detect if a column contains country names using external API validation.
     """
     try:
-        values = [
-            str(v).strip()
-            for v in values
-            if v is not None
-        ]
+        values = [str(v).strip() for v in values if v is not None]
 
         if not values:
             return {}
@@ -54,9 +51,7 @@ async def detect_country(values: list[Any]) -> dict:
         return {}
 
     except Exception as e:
-        logger.exception(
-            f"Country enrichment failed: {e}"
-        )
+        logger.exception(f"Country enrichment failed: {e}")
         return {}
 
 
@@ -77,22 +72,14 @@ async def detect_currency(values: list[Any]) -> dict:
     Detect if a column contains ISO currency codes.
     """
     try:
-        values = [
-            str(v).strip().upper()
-            for v in values
-            if v is not None
-        ]
+        values = [str(v).strip().upper() for v in values if v is not None]
 
         if not values:
             return {}
 
         sample = values[:50]
 
-        valid = sum(
-            1
-            for value in sample
-            if value in ISO_CURRENCIES
-        )
+        valid = sum(1 for value in sample if value in ISO_CURRENCIES)
 
         ratio = valid / len(sample)
 
@@ -106,35 +93,21 @@ async def detect_currency(values: list[Any]) -> dict:
         return {}
 
     except Exception as e:
-        logger.exception(
-            f"Currency enrichment failed: {e}"
-        )
+        logger.exception(f"Currency enrichment failed: {e}")
         return {}
 
 
-import re
-
-EMAIL_PATTERN = re.compile(
-    r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-)
+EMAIL_PATTERN = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 
 
 async def detect_email_type(values: list[Any]) -> dict:
     try:
-        values = [
-            str(v).strip()
-            for v in values
-            if v is not None
-        ]
+        values = [str(v).strip() for v in values if v is not None]
 
         if not values:
             return {}
 
-        valid = sum(
-            1
-            for value in values[:50]
-            if EMAIL_PATTERN.match(value)
-        )
+        valid = sum(1 for value in values[:50] if EMAIL_PATTERN.match(value))
 
         ratio = valid / len(values[:50])
 
@@ -147,15 +120,13 @@ async def detect_email_type(values: list[Any]) -> dict:
         return {}
 
     except Exception as e:
-        logger.exception(
-            f"Email enrichment failed: {e}"
-        )
+        logger.exception(f"Email enrichment failed: {e}")
         return {}
 
 
 async def enrich_column(
-        column_name: str,
-        values: list[Any],
+    column_name: str,
+    values: list[Any],
 ) -> dict:
     try:
         detectors = [
@@ -184,9 +155,7 @@ async def enrich_column(
         }
 
     except Exception as e:
-        logger.exception(
-            f"Column enrichment failed: {e}"
-        )
+        logger.exception(f"Column enrichment failed: {e}")
 
         return {
             "semantic_type": "unknown",

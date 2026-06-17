@@ -1,7 +1,7 @@
+import re
+
 from core.db.base import SensitivityLevel
 from core.logging import logger
-
-import re
 
 PII_RULES = {
     "emails": SensitivityLevel.PII,
@@ -9,7 +9,6 @@ PII_RULES = {
     "phone": SensitivityLevel.PII,
     "mobile": SensitivityLevel.PII,
     "msisdn": SensitivityLevel.PII,
-
     "ssn": SensitivityLevel.SENSITIVE_PII,
     "national_id": SensitivityLevel.SENSITIVE_PII,
     "nid": SensitivityLevel.SENSITIVE_PII,
@@ -71,10 +70,9 @@ def classify_value(value) -> SensitivityLevel | None:
 
 
 def classify_column(
-    column_name: str,
-    sample_values: list,
+        column_name: str,
+        sample_values: list,
 ) -> tuple[SensitivityLevel, str | None]:
-
     name = column_name.lower().strip()
 
     logger.info(f"Classifying column: {column_name}, samples={len(sample_values)}")

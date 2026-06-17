@@ -7,24 +7,23 @@ from app.models.datasource import DataSource
 from app.models.user import User
 from app.schemas.datasource import (
     DataSourceCreate,
-    DataSourceUpdate,
     DataSourceRead,
+    DataSourceUpdate,
 )
 from app.services.audit import log_audit_action
 from app.services.crud import crud
-from core.security.encryption import encrypt_value, decrypt_value
 from core.logging import logger
-
+from core.security.encryption import decrypt_value, encrypt_value
 from core.settings.exceptions.datasource import (
-    DatasourceNotFound,
     DatasourceConnectionFailed,
+    DatasourceNotFound,
 )
 
 
 async def create_datasource(
-        db: AsyncSession,
-        body: DataSourceCreate,
-        owner: User,
+    db: AsyncSession,
+    body: DataSourceCreate,
+    owner: User,
 ):
     logger.info(f"Creating datasource: name={body.name}, owner_id={owner.id}")
 
@@ -83,8 +82,8 @@ async def get_datasource(db: AsyncSession, datasource_id: int):
 
 
 async def get_datasource_with_categories(
-        db: AsyncSession,
-        datasource_id: int,
+    db: AsyncSession,
+    datasource_id: int,
 ):
     logger.info(f"Fetching datasource with categories: id={datasource_id}")
 
@@ -106,6 +105,7 @@ async def get_datasource_with_categories(
 
     return datasource
 
+
 async def list_datasources(db: AsyncSession, *, skip: int = 0, limit: int = 100):
     logger.info(f"Listing datasources: skip={skip}, limit={limit}")
 
@@ -118,17 +118,14 @@ async def list_datasources(db: AsyncSession, *, skip: int = 0, limit: int = 100)
 
     logger.info(f"Datasources fetched: count={len(datasources)}")
 
-    return [
-        DataSourceRead.model_validate(ds)
-        for ds in datasources
-    ]
+    return [DataSourceRead.model_validate(ds) for ds in datasources]
 
 
 async def update_datasource(
-        db: AsyncSession,
-        datasource_id: int,
-        body: DataSourceUpdate,
-        actor: User,
+    db: AsyncSession,
+    datasource_id: int,
+    body: DataSourceUpdate,
+    actor: User,
 ):
     logger.info(f"Updating datasource: id={datasource_id}, actor_id={actor.id}")
 
@@ -245,9 +242,7 @@ async def test_connection(datasource_id: int, db: AsyncSession):
     datasource = await crud.get_one(db, DataSource, id=datasource_id)
 
     if not datasource:
-        logger.warning(
-            f"Connection test failed - datasource not found: id={datasource_id}"
-        )
+        logger.warning(f"Connection test failed - datasource not found: id={datasource_id}")
         raise DatasourceNotFound(f"Datasource {datasource_id} not found")
 
     engine = None
@@ -262,9 +257,7 @@ async def test_connection(datasource_id: int, db: AsyncSession):
         return True
 
     except Exception as e:
-        logger.error(
-            f"Connection failed: datasource_id={datasource_id}, error={str(e)}"
-        )
+        logger.error(f"Connection failed: datasource_id={datasource_id}, error={str(e)}")
         raise DatasourceConnectionFailed()
 
     finally:
@@ -272,27 +265,23 @@ async def test_connection(datasource_id: int, db: AsyncSession):
             await engine.dispose()
             logger.info(f"Engine disposed: datasource_id={datasource_id}")
 
+
 async def get_datasource_catalog(
-        db: AsyncSession,
-        datasource_id: int,
+    db: AsyncSession,
+    datasource_id: int,
 ):
-    logger.info(
-        f"Fetching datasource catalog: datasource_id={datasource_id}"
-    )
+    logger.info(f"Fetching datasource catalog: datasource_id={datasource_id}")
 
     datasource = await crud.get_one(
         db,
         DataSource,
-        selectinload(DataSource.tables)
-        .selectinload(TableCatalog.columns),
+        selectinload(DataSource.tables).selectinload(TableCatalog.columns),
         id=datasource_id,
     )
     if not datasource:
         raise DatasourceNotFound
 
-    logger.info(
-        f"Catalog requested for datasource: id={datasource_id}"
-    )
+    logger.info(f"Catalog requested for datasource: id={datasource_id}")
 
     return {
         "datasource_id": datasource.id,
@@ -310,9 +299,7 @@ async def get_datasource_catalog(
                         "declared_type": column.declared_type,
                         "profile": column.profile,
                         "sensitivity_level": (
-                            column.sensitivity_level.value
-                            if column.sensitivity_level
-                            else None
+                            column.sensitivity_level.value if column.sensitivity_level else None
                         ),
                         "sensitivity_reason": column.sensitivity_reason,
                         "semantic_type": column.semantic_type,
@@ -325,4 +312,3 @@ async def get_datasource_catalog(
             for table in datasource.tables
         ],
     }
-

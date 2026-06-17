@@ -2,13 +2,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
-from app.schemas.auth import UserCreate, UserUpdate, UserRead, TokenResponse
+from app.schemas.auth import TokenResponse, UserCreate, UserRead, UserUpdate
 from app.services.audit import log_audit_action
 from app.services.crud import crud
 from core.db.base import UserRole
-from core.security.security import hash_password, verify_password, create_access_token
 from core.logging import logger
-from core.settings.exceptions.auth import UserAlreadyExists, IncorrectEmailOrPassword, InactiveUser, UserNotFound
+from core.security.security import create_access_token, hash_password, verify_password
+from core.settings.exceptions.auth import (
+    InactiveUser,
+    IncorrectEmailOrPassword,
+    UserAlreadyExists,
+    UserNotFound,
+)
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
@@ -67,7 +72,7 @@ async def register_and_create_user(body, admin, db):
             "emails": new_user.email,
             "role": new_user.role.value,
         },
-        can_commit=True
+        can_commit=True,
     )
 
     logger.info(f"User created successfully: id={new_user.id}, emails={new_user.email}")
@@ -183,24 +188,20 @@ async def login_user(form_data, db):
         entity_type="auth",
         entity_id=user.id,
         details={"emails": user.email},
-        can_commit=True
+        can_commit=True,
     )
 
     return TokenResponse(access_token=access_token)
 
 
 async def get_users(
-        db: AsyncSession,
-        skip: int = 0,
-        limit: int = 100,
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
 ):
     logger.info(f"Fetching users: skip={skip}, limit={limit}")
 
-    result = await db.execute(
-        select(User)
-        .offset(skip)
-        .limit(limit)
-    )
+    result = await db.execute(select(User).offset(skip).limit(limit))
 
     users = result.scalars().all()
 
@@ -210,9 +211,9 @@ async def get_users(
 
 
 async def delete_user(
-        db: AsyncSession,
-        user_id: int,
-        actor_id: int,
+    db: AsyncSession,
+    user_id: int,
+    actor_id: int,
 ):
     logger.info(f"Deleting user: id={user_id}")
 
@@ -230,7 +231,7 @@ async def delete_user(
             "emails": user.email,
             "role": user.role.value,
         },
-        can_commit=True
+        can_commit=True,
     )
 
     await db.commit()

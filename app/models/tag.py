@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean
+from sqlalchemy import Boolean, Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.db.base import Base, TimestampMixin
@@ -19,6 +19,4 @@ class Tag(Base, TimestampMixin):
     is_system: Mapped[bool] = mapped_column(Boolean, default=False)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-    datasets: Mapped[list["Dataset"]] = relationship(
-        secondary=dataset_tags, back_populates="tags"
-    )
+    datasets: Mapped[list["Dataset"]] = relationship(secondary=dataset_tags, back_populates="tags")

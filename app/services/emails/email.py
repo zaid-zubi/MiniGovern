@@ -29,10 +29,7 @@ def send_email(
         ) as smtp:
             smtp.ehlo()
 
-            if (
-                settings.smtp_username
-                and settings.smtp_password
-            ):
+            if settings.smtp_username and settings.smtp_password:
                 smtp.starttls()
                 smtp.login(
                     settings.smtp_username,
@@ -51,6 +48,4 @@ def send_email(
         )
 
     except Exception:
-        logger.exception(
-            "Failed to send emails"
-        )
+        logger.exception("Failed to send emails")

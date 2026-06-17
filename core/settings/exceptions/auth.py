@@ -1,6 +1,7 @@
+from fastapi import status
+
 from core.settings.base_exception import AppException
 from core.settings.constants import Error
-from fastapi import status
 
 
 class UserNotFound(AppException):
@@ -31,4 +32,5 @@ class InactiveUser(AppException):
     def __init__(self, message: str | None = None):
         super().__init__(
             message or "User is inactive",
-            status.HTTP_403_FORBIDDEN,)
+            status.HTTP_403_FORBIDDEN,
+        )

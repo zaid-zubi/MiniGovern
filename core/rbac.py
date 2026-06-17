@@ -29,7 +29,6 @@ class Permission(str, enum.Enum):
     CATALOG_READ = "catalog:read"
 
 
-
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
     UserRole.VIEWER: frozenset(
         {
@@ -39,7 +38,7 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
             Permission.TAG_READ,
             Permission.CATEGORY_READ,
             Permission.SCAN_READ,
-            Permission.CATALOG_READ
+            Permission.CATALOG_READ,
         }
     ),
     UserRole.EDITOR: frozenset(
@@ -58,7 +57,7 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
             Permission.TAG_ASSIGN,
             Permission.TAG_CREATE,
             Permission.TAG_DELETE,
-            Permission.CATALOG_READ
+            Permission.CATALOG_READ,
         }
     ),
     UserRole.ADMIN: frozenset(Permission),

@@ -1,19 +1,21 @@
 from fastapi import Depends, FastAPI
-from core.config import settings
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
-from core.db.session import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.views.auth import router as auth_router
+from app.views.catalog import router as catalog_router
+from app.views.categories import router as category_router
+from app.views.datasets import router as dataset_router
 from app.views.datasources import router as datasources_router
 from app.views.scan_job import router as scan_job_router
 from app.views.tags import router as tags_router
-from app.views.categories import router as category_router
-from app.views.datasets import router as dataset_router
-from app.views.catalog import router as catalog_router
+from core.config import settings
+from core.db.session import get_db
 from core.settings.base_exception import AppException
-from core.settings.constants import ResponseMessages, Error
+from core.settings.constants import Error
 from core.settings.exceptions.datasource import DatasourceConnectionFailed
-from core.settings.response import http_response
 
 app = FastAPI(title="MiniGovern", debug=settings.debug)
 app.include_router(auth_router)
@@ -35,10 +37,6 @@ async def health(db: AsyncSession = Depends(get_db)):
     }
 
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-
 @app.exception_handler(DatasourceConnectionFailed)
 async def datasource_connection_failed_handler(
         request: Request,
@@ -50,9 +48,11 @@ async def datasource_connection_failed_handler(
             "status": 400,
             "success": False,
             "message": Error.DATABASE_CONNECTION_FAILUER,
-            "error": None
+            "error": None,
         },
     )
+
+
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
     return JSONResponse(

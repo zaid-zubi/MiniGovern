@@ -9,7 +9,6 @@ from core.db.base import UserRole
 from core.db.session import AsyncSessionLocal
 from core.security.security import hash_password
 
-
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 
 
@@ -48,9 +47,7 @@ async def create_admin():
         return
 
     async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await db.execute(select(User).where(User.email == email))
         existing = result.scalar_one_or_none()
 
         if existing:

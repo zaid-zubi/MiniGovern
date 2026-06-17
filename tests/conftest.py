@@ -2,11 +2,9 @@ import secrets
 import string
 import uuid
 
-from httpx import AsyncClient
-
-from core.db.base import UserRole
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
 
@@ -15,8 +13,8 @@ async def async_client():
     transport = ASGITransport(app=app)
 
     async with AsyncClient(
-            transport=transport,
-            base_url="http://test",
+        transport=transport,
+        base_url="http://test",
     ) as client:
         yield client
 
@@ -28,6 +26,7 @@ async def create_user(async_client: AsyncClient, payload: dict):
 
 
 # ---------------- LOGIN ----------------
+
 
 async def login_for_testing(async_client: AsyncClient, email: str, password: str):
     login = await async_client.post(
@@ -43,6 +42,7 @@ async def login_for_testing(async_client: AsyncClient, email: str, password: str
 
 
 # ---------------- ADMIN TOKEN ----------------
+
 
 async def get_admin_token(async_client: AsyncClient):
     """
@@ -64,10 +64,11 @@ async def get_admin_token(async_client: AsyncClient):
 
 # ---------------- RANDOM GENERATORS ----------------
 
+
 def generate_random_email(domain: str = "test.com") -> str:
     return f"user_{uuid.uuid4().hex[:10]}@{domain}"
 
 
 def generate_random_password(length: int = 12) -> str:
     chars = string.ascii_letters + string.digits + "!@#$%^&*"
-    return ''.join(secrets.choice(chars) for _ in range(length))
+    return "".join(secrets.choice(chars) for _ in range(length))
