@@ -15,4 +15,4 @@ class AuditLog(Base, TimestampMixin):
     details: Mapped[dict | None] = mapped_column(JSON)
 
     dataset_id: Mapped[int | None] = mapped_column(ForeignKey("datasets.id"))
-    dataset: Mapped["Dataset" | None] = relationship(back_populates="audit_logs")
+    dataset: Mapped["Dataset"] = relationship(back_populates="audit_logs")

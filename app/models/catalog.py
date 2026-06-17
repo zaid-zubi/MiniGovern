@@ -16,7 +16,7 @@ class TableCatalog(Base, TimestampMixin):
     datasource: Mapped["DataSource"] = relationship(back_populates="tables")
     scan_job: Mapped["ScanJob"] = relationship(back_populates="tables")
     columns: Mapped[list["ColumnCatalog"]] = relationship(back_populates="table")
-    dataset: Mapped["Dataset" | None] = relationship(back_populates="table_catalog", uselist=False)
+    dataset: Mapped["Dataset"] = relationship(back_populates="table_catalog", uselist=False)
 
 
 class ColumnCatalog(Base, TimestampMixin):

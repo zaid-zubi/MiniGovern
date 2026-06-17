@@ -13,8 +13,8 @@ async def async_client():
     transport = ASGITransport(app=app)
 
     async with AsyncClient(
-        transport=transport,
-        base_url="http://test",
+            transport=transport,
+            base_url="http://test",
     ) as client:
         yield client
 
@@ -23,9 +23,6 @@ async def create_user(async_client: AsyncClient, payload: dict):
     res = await async_client.post("/auth/users", json=payload)
     assert res.status_code in (200, 201), res.text
     return res.json().get("data")
-
-
-# ---------------- LOGIN ----------------
 
 
 async def login_for_testing(async_client: AsyncClient, email: str, password: str):
@@ -39,9 +36,6 @@ async def login_for_testing(async_client: AsyncClient, email: str, password: str
 
     assert login.status_code == 200, login.text
     return login.json()["access_token"]
-
-
-# ---------------- ADMIN TOKEN ----------------
 
 
 async def get_admin_token(async_client: AsyncClient):
@@ -60,9 +54,6 @@ async def get_admin_token(async_client: AsyncClient):
 
     assert login.status_code == 200, login.text
     return login.json()["access_token"]
-
-
-# ---------------- RANDOM GENERATORS ----------------
 
 
 def generate_random_email(domain: str = "test.com") -> str:

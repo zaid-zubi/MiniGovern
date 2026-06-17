@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from jose import JWTError, jwt
@@ -24,7 +24,7 @@ def create_access_token(
     email: str,
     expires_delta: timedelta | None = None,
 ) -> str:
-    expire = datetime.now(datetime.utc) + (
+    expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.jwt_access_token_expire_minutes)
     )
     payload: dict[str, Any] = {

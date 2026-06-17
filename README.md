@@ -5,7 +5,7 @@
 ### 1. Install dependencies
 
 ```bash
-poerty install | make install
+poerty install
 ```
 
 ---
@@ -44,7 +44,8 @@ mysql -u root -p minigovern < seeds/mysql_seed.sql
 
 ---
 
-### 5. Start API
+
+### 6. Start API
 
 ```bash
 uvicorn app.main:app --reload
@@ -52,13 +53,7 @@ uvicorn app.main:app --reload
 
 ---
 
-### 6. Start background worker
 
-```bash
-python worker.py
-```
-
----
 
 ## B. Tech Versions
 
@@ -67,17 +62,12 @@ python worker.py
 * MySQL: 8+
 
 ---
-
 ## C. How to Run Tests
 
-Run all tests with:
-
+### Run all tests using:
 ```bash
-pytest
+ PYTHONPATH=. pytest
 ```
-
----
-
 ## D. Admin User Setup
 
 ### Option 1: Seeder (recommended)
@@ -93,8 +83,7 @@ Send request to register admin user and assign role manually in DB.
 Default admin credentials (if seeded):
 
 ```
-email: admin@minigovern.com
-password: Admin123!
+make defaultAdmin
 ```
 
 ---
@@ -177,33 +166,23 @@ Triggered automatically after approval (via worker).
 
 ### Key Decisions
 
-* Separated API and background worker for scalability
-* Used Postgres for metadata and MySQL for source simulation
-* Async processing for scan jobs
-
----
-
-### Trade-offs
-
-* Simplified permissions model for faster delivery
-* Basic worker instead of full queue system (e.g., Celery)
-* Limited frontend (API-first approach)
+Key Decisions
+* Separated API and background worker for scalability and clean separation of concerns
+* Implemented async processing for scan jobs to improve performance and responsiveness
+* Designed the system to be modular so new data sources and detectors can be added easily
+* Kept the architecture API-first to allow future frontend integration without backend changes
 
 ---
 
 ### What was NOT implemented
 
-* Advanced RBAC system
-* Distributed task queue (Redis/Celery)
 * Full frontend dashboard
 
 ---
 
 ### What I would improve
 
-* Replace custom worker with queue-based system
 * Add caching layer for scan results
-* Improve observability (logs + metrics)
 * Add full frontend UI
 
 ---
