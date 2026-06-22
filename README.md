@@ -1,34 +1,188 @@
-# MiniGovern — README
+# MiniGovern
 
-## A. Setup Steps
+MiniGovern is a lightweight data governance platform that scans databases, discovers datasets, detects sensitive information (PII), and manages dataset approval workflows.
 
-### 1. Install dependencies
+The system allows organizations to:
 
-```bash
-poerty install
-```
+* Connect external data sources
+* Scan and profile datasets
+* Detect sensitive fields (PII)
+* Manage dataset metadata and tags
+* Add category for datasources
+* Submit datasets for approval
+* Approve or reject datasets through a governance workflow
+* Send notifications for governance actions
 
 ---
 
-### 2. Configure `.env`
+#### FastAPI Application
 
-Copy example file and configure environment variables:
+Responsible for:
+
+* Authentication & Authorization
+* RBAC
+* Datasets Management
+* User Management
+* Categories Management
+* Tags Management
+* Approval Workflows
+* Scan Requests
+* Enrichment & PII validation
+* Send Notification
+* Catalog APIs
+
+#### PostgreSQL
+
+##Database Schema
+The application database contains the following tables:
+
+- users
+- datasources
+- categories
+- category_datasource
+- scan_jobs
+- table_catalogs
+- column_catalogs
+- datasets
+- tags
+- dataset_tags
+- audit_logs
+
+#### MySQL Source Database
+
+Acts as a sample external data source that can be scanned and profiled.
+
+#### Background Workers
+
+Responsible for:
+
+* Executing scan jobs
+* Profiling datasets
+* Detecting PII
+* Processing asynchronous tasks
+
+---
+
+# Features
+
+## Authentication & Authorization
+
+* JWT-based authentication
+* Role-based access control
+* Admin and standard user roles
+
+## Data Source Management
+
+* Register data sources
+* Manage external database connections
+
+## Dataset Discovery
+
+* Scan external databases
+* Discover tables and columns
+* Build catalog entries
+
+## PII Detection
+
+Automatic detection of:
+
+* Email addresses
+* Phone numbers
+* Countries
+* Other supported patterns
+
+## Governance Workflow
+
+* Submit datasets
+* Review datasets
+* Approve or reject datasets
+* Track approval status
+
+## Notifications
+
+* Trigger notifications after governance actions
+
+---
+
+# Technology Stack
+
+| Component             | Technology    |
+| --------------------- | ------------- |
+| API                   | FastAPI       |
+| ORM                   | SQLAlchemy    |
+| Validation            | Pydantic      |
+| Database              | PostgreSQL    |
+| Source Database       | MySQL         |
+| Migrations            | Alembic       |
+| Authentication        | JWT           |
+| Testing               | Pytest        |
+| HTTP Client           | HTTPX         |
+| Background Processing | Async Workers |
+---
+
+# Prerequisites
+
+* Python 3.12+
+* PostgreSQL 15+
+* MySQL 8+
+
+---
+
+# Local Setup
+
+## 1. Clone Repository
+
+```bash
+git clone <repository-url>
+cd MiniGovern
+```
+
+## 2. Install Dependencies
+
+```bash
+poetry install
+```
+
+## 3. Configure Environment Variables
+
+Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
 Update required values:
- 
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/minigovern
-MYSQL_URL=mysql://user:password@localhost:3306/minigovern
-SECRET_KEY=your_secret_key
+
+```env
+APP_ENV=development
+DEBUG=false
+LOG_LEVEL=INFO
+
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/MiniGovern
+SOURCE_DATABASE_URL=mysql+asyncmy://reader:reader_pass@localhost:3306/source_db
+
+HOST=127.0.0.1
+PORT=8000
+
+JWT_SECRET_KEY=your-jwt-secret-key
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+ENCRYPTION_KEY=your-fernet-encryption-key
+
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=noreply@minigovern.local
+
+COUNTRY_API=
 ```
 
 ---
 
-### 3. Run Postgres migrations
+## 4. Run Database Migrations
+- You have to create MiniGovern in your local machine
 
 ```bash
 alembic upgrade head
@@ -36,58 +190,53 @@ alembic upgrade head
 
 ---
 
-### 4. Load MySQL seed script
+## 5. Create Default Admin User
 
 ```bash
-mysql -u root -p minigovern < seeds/mysql_seed.sql
+python scripts/seed_admin.py 
 ```
-
----
-
-
-### 6. Start API
-
+OR
 ```bash
-uvicorn app.main:app --reload
-```
-
----
-
-
-
-## B. Tech Versions
-
-* Python: 3.11+
-* PostgreSQL: 14+
-* MySQL: 8+
-
----
-## C. How to Run Tests
-
-### Run all tests using:
-```bash
- PYTHONPATH=. pytest
-```
-## D. Admin User Setup
-
-### Option 1: Seeder (recommended)
-
-```bash
-python scripts/seed_admin.py
-```
-
-### Option 2: API (if enabled)
-
-Send request to register admin user and assign role manually in DB.
-
-Default admin credentials (if seeded):
-
-```
 make defaultAdmin
 ```
 
 ---
 
+## 6. Start Application
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Application:
+
+```text
+http://localhost:8000
+```
+
+Swagger Documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# Running Tests
+
+Run all tests:
+
+```bash
+PYTHONPATH=. pytest
+```
+
+Run with coverage:
+
+```bash
+PYTHONPATH=. pytest --cov
+```
+
+---
 ## E. Example Flow (Full System)
 
 ### 1. Register user
@@ -162,27 +311,76 @@ Triggered automatically after approval (via worker).
 
 ---
 
-## F. Design Notes
+# Design Decisions
 
-### Key Decisions
+## Why Async Processing?
 
-Key Decisions
-* Separated API and background worker for scalability and clean separation of concerns
-* Implemented async processing for scan jobs to improve performance and responsiveness
-* Designed the system to be modular so new data sources and detectors can be added easily
-* Kept the architecture API-first to allow future frontend integration without backend changes
+Scanning databases and profiling datasets can be expensive operations.
+
+Using asynchronous processing:
+
+* Prevents API blocking
+* Improves responsiveness
+* Supports larger scans
+* Allows future horizontal scaling
+
+## Why Separate Source and Application Databases?
+
+The application database stores governance metadata while source databases contain business data.
+
+This separation:
+
+* Reflects real-world governance platforms
+* Improves security
+* Keeps scanning logic isolated
+
+## Why Modular Services?
+
+The system was designed to make future extensions easier.
+
+Examples:
+
+* Add new PII detectors
+* Support new database engines
+* Introduce new approval workflows
+* Integrate external notification providers
 
 ---
 
-### What was NOT implemented
+# Limitations
 
-* Full frontend dashboard
+The following items were intentionally left out due to assignment scope:
+
+* Frontend dashboard
+* Advanced analytics
+* Real-time notifications
+
+---
+
+# Future Improvements
+
+Given additional time, I would implement:
+
+* Frontend dashboard
+* Redis caching
+* Distributed task queue
+* More advanced PII detection
+* Audit logging
+* Scan scheduling
+* Dataset versioning
+* Monitoring and observability
+* CI/CD deployment pipeline
 
 ---
 
-### What I would improve
+# Assignment Notes
 
-* Add caching layer for scan results
-* Add full frontend UI
+Development Time: **6 Days**
 
----
+The focus of this implementation was:
+
+* Clean architecture
+* Maintainability
+* Extensibility
+* Testability
+* Real-world governance workflow design
